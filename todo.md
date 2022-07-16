@@ -1,9 +1,9 @@
 
-- health command
 - logging settings/file
 - cli params
 - update readme
 - telegram token secret
+- health uptime https://stackoverflow.com/questions/11357945/
 - print config at the beginning
 - lein release
 - create a new bot
