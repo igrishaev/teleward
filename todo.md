@@ -1,6 +1,4 @@
 
-- rename project
-- telegram callback
 - telegram token secret
 - update readme
 - lein release

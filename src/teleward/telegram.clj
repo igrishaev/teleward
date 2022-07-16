@@ -1,6 +1,7 @@
 (ns teleward.telegram
   (:require
    [cheshire.core :as json]
+   [clojure.string :as str]
    [clojure.java.io :as io]
    [org.httpkit.client :as http]))
 
@@ -70,27 +71,48 @@
            (assoc-in [:headers "content-type"] "application/json")
            (assoc :body (json/generate-string params))))
 
-        ;; TODO: async call?
+        {:keys [error status body headers]}
+        @(http/request request)]
 
-        {:keys [status body]}
-        @(http/request request)
+    (if error
+      (throw (ex-info (format "Telegram HTTP error: %s %s %s")
+                      {:api-method api-method
+                       :api-params params}
+                      error))
 
-        {:keys [ok
-                result
-                error_code
-                description]}
-        (-> body io/reader (json/decode-stream keyword))]
+      (let [{:keys [content-type]}
+            headers
 
-    (if ok
-      result
-      (throw (ex-info (format "Telegram API error: %s %s %s"
-                              error_code api-method description)
-                      {:http-status status
-                       :http-method http-method
-                       :api-method api-method
-                       :api-params params
-                       :error-code error_code
-                       :error description})))))
+            json?
+            (some-> content-type
+                    (str/starts-with? "application/json"))
+
+            body-json
+            (if json?
+              (-> body io/reader (json/decode-stream keyword))
+              (throw (ex-info (format "Telegram response was not JSON: %s" content-type)
+                              {:http-status status
+                               :http-method http-method
+                               :http-headers headers
+                               :api-method api-method
+                               :api-params params})))
+
+            {:keys [ok
+                    result
+                    error_code
+                    description]}
+            body-json]
+
+        (if ok
+          result
+          (throw (ex-info (format "Telegram API error: %s %s %s"
+                                  error_code api-method description)
+                          {:http-status status
+                           :http-method http-method
+                           :api-method api-method
+                           :api-params params
+                           :error-code error_code
+                           :error description})))))))
 
 
 (defn get-updates
