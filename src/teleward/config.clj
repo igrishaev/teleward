@@ -38,6 +38,14 @@
 
    ["-l" "--logging.level LEVEL" "Logging level"
     :default (get-in defaults [:logging :level])
+    :parse-fn keyword]
+
+   [nil "--lang LANG" "Message language"
+    :default (get-in defaults [:lang])
+    :parse-fn keyword]
+
+   [nil "--captcha.style CAPTCHA_STYLE" "Captcha style"
+    :default (get-in defaults [:captcha :style])
     :parse-fn keyword]])
 
 

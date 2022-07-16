@@ -21,6 +21,16 @@
                              :exit/message message}))))
 
 
+(def HELP "
+Teleward bot. Usage:
+$> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
+")
+
+(defn handle-help [summary]
+  (println HELP)
+  (println summary))
+
+
 (defn start-polling [cli-options]
   (let [config
         (config/make-config cli-options)]
@@ -49,8 +59,8 @@
       version
       (println (version/get-version))
 
-      ;; help
-      ;; (println "help")
+      help
+      (handle-help summary)
 
       :else
       (start-polling options))))

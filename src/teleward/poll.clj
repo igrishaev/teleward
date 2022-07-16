@@ -57,8 +57,8 @@
                 telegram]
          {:keys [user-trail-attempts
                  message-expires
-                 solution-threshold]}
-         :polling}
+                 solution-threshold]} :polling
+         {captcha-style :style} :captcha}
         config]
 
     (doseq [upd-entry updates
@@ -98,7 +98,7 @@
 
         ;; send captcha
         (let [[captcha-text captcha-solution]
-              (captcha/make-captcha)
+              (captcha/make-captcha captcha-style)
 
               captcha-message
               (locale/get-captcha-message lang member-username captcha-text)
@@ -194,8 +194,7 @@
   [config]
 
   (let [{{:keys [udpate-timeout
-                 offset-file]}
-         :polling
+                 offset-file]} :polling
          :keys [telegram]}
         config
 
