@@ -115,6 +115,12 @@
                            :error description})))))))
 
 
+(defn get-me
+  "https://core.telegram.org/bots/api#getme"
+  [config]
+  (api-request config :getMe :get nil))
+
+
 (defn get-updates
   "https://core.telegram.org/bots/api#getupdates"
 

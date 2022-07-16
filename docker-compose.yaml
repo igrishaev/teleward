@@ -1,0 +1,11 @@
+version: '3.5'
+
+services:
+  compile:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /build
+    volumes:
+      - .:/build
+    command: "make graal-build"

@@ -59,7 +59,10 @@
                  message-expires
                  solution-threshold]} :polling
          {captcha-style :style} :captcha}
-        config]
+        config
+
+        {my-id :id}
+        (tg/get-me telegram)]
 
     (doseq [upd-entry updates
 
@@ -90,7 +93,8 @@
       ;; for each new member...
       (doseq [member new_chat_members
               :let [{member-id :id
-                     member-username :username} member]]
+                     member-username :username} member]
+              :when (not= my-id member-id)]
 
         ;; mark it as locked
         (set-attrs state chat-id member-id
