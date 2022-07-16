@@ -8,7 +8,11 @@
    [clojure.tools.logging :as log]))
 
 
-(defmacro with-safe-log [& body]
+(defmacro with-safe-log
+  "
+  A macro to wrap Telegram calls (prevent the whole program from crushing).
+  "
+  [& body]
   `(try
      ~@body
      (catch Throwable e#
@@ -16,6 +20,15 @@
 
 (defn unix-now []
   (quot (System/currentTimeMillis) 1000))
+
+
+;;
+;; A bunch of functions to track the state of the world.
+;; The content of the state atom is a map like this:
+;; chat-id => user => {attrs}
+;; The functions provide CRUD operations for a single attribute
+;; and multiple attributes as well (with -s at the end).
+;;
 
 (defn set-attr [state chat-id user-id attr val]
   (swap! state assoc-in [chat-id user-id attr] val))
@@ -38,14 +51,24 @@
 (defn del-attrs [state chat-id user-id]
   (swap! state update chat-id dissoc user-id))
 
+;;
 
-(defn looks-solution? [text len-threshold]
+(defn looks-solution?
+  "
+  True if a message *might be* (but not for sure)
+  a solution for captcha (pretty short).
+  "
+  [text len-threshold]
   (and
    (not (str/blank? text))
    (<= (count text) len-threshold)))
 
 
-(defn almost-now [time offset]
+(defn almost-now
+  "
+  True if the given Unix `time` is around the current Unix timestamp.
+  "
+  [time offset]
   (let [now (unix-now)]
     (<= (- now offset) time (+ now offset))))
 
@@ -53,7 +76,8 @@
 (defn process-updates
   [config state updates]
 
-  (let [{:keys [lang
+  (let [;; destruct the config vars in advance
+        {:keys [lang
                 telegram]
          {:keys [user-trail-attempts
                  message-expires
@@ -61,6 +85,7 @@
          {captcha-style :style} :captcha}
         config
 
+        ;; track the bot's own ID to not messaging itself
         {my-id :id}
         (tg/get-me telegram)]
 
@@ -94,6 +119,7 @@
       (doseq [member new_chat_members
               :let [{member-id :id
                      member-username :username} member]
+              ;; except our bot
               :when (not= my-id member-id)]
 
         ;; mark it as locked
@@ -107,6 +133,7 @@
               captcha-message
               (locale/get-captcha-message lang member-username captcha-text)
 
+              ;; track the id of the captcha message
               {captcha-message-id :message_id}
               (with-safe-log
                 (tg/send-message telegram chat-id captcha-message))]
@@ -122,7 +149,7 @@
               left_chat_member
               captcha-message-id
               (get-attr state chat-id member-id :captcha-message-id)]
-          ;; delete captcha message
+          ;; just delete captcha message
           (when captcha-message-id
             (with-safe-log
               (tg/delete-message telegram chat-id captcha-message-id)))))
@@ -130,31 +157,41 @@
       ;; check for commands
       (when (= text "/health")
         (with-safe-log
+          ;; TODO: provide uptime report
           (tg/send-message telegram chat-id "OK")))
 
-      ;; check the current message
+      ;; check the current message for captcha
       (let [{:keys [locked?
                     captcha-text
                     captcha-solution
                     captcha-message-id]}
             (get-attrs state chat-id user-id)]
 
+        ;; if the current user is locked...
         (when (and locked?
                    captcha-text
                    captcha-solution)
 
+          ;; delete its message anyway
           (with-safe-log
             (tg/delete-message telegram chat-id message_id))
+
 
           (if (and (looks-solution? text solution-threshold)
                    (= (str/trim text) captcha-solution))
 
+            ;; if the user has solved the captcha,
+            ;; delete the captcha message and reset all the attributes
             (do
               (when captcha-message-id
                 (with-safe-log
                   (tg/delete-message telegram chat-id captcha-message-id)))
               (del-attrs state chat-id user-id))
 
+
+            ;; increase the number of attempts. When the attempts are over,
+            ;; delete the captcha message and ban a user. But keep the attributes
+            ;; for the next stage.
             (do
               (inc-attr state chat-id user-id :attempt)
               (let [attempt
@@ -168,7 +205,13 @@
                                  {:revoke-messages true})))))))))))
 
 
-(defn process-pending-users [config state]
+(defn process-pending-users
+  "
+  Cleanup: ban users who haven't solved the captcha in time.
+  The `date` attr tracks the date the user did join.
+  Delete the captcha message, ban the user, drop the attributes.
+  "
+  [config state]
   (let [{:keys [telegram]
          {:keys [user-trail-period]} :polling}
         config]

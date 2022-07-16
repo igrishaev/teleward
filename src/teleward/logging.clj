@@ -1,5 +1,11 @@
 (ns teleward.logging
-  "https://stackoverflow.com/questions/16910955/programmatically-configure-logback-appender"
+  "
+  Configure Logback manually by a config map.
+  An XML file in the `resources` firectory is not an options as:
+  1) we need do build the config dynamically, and
+  2) it doesn't work with GraalVM/native-image.
+  See https://stackoverflow.com/questions/16910955/
+  "
   (:require
    [clojure.tools.logging :as log])
   (:import
@@ -19,6 +25,7 @@
     :error Level/ERROR
     (throw (ex-info (format "Wrong logging level: %s" kw)
                     {:level kw}))))
+
 
 (defn init-logging [logging]
 
@@ -54,6 +61,7 @@
               (.start))]
         (.addAppender root-logger app-console)))
 
+    ;; just a Flippest for now although a rolling file would be better
     (when file
       (let [app-file
             (doto (new FileAppender)

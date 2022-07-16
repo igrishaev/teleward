@@ -1,4 +1,7 @@
 (ns teleward.locale
+  "
+  Locale-dependant utilities.
+  "
   (:require
    [clojure.string :as str]))
 

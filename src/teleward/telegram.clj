@@ -1,4 +1,7 @@
 (ns teleward.telegram
+  "
+  Telegram HTTP API.
+  "
   (:require
    [cheshire.core :as json]
    [clojure.string :as str]
@@ -6,7 +9,11 @@
    [org.httpkit.client :as http]))
 
 
-(defn filter-params [params]
+(defn filter-params
+  "
+  Filter out nil values from a map.
+  "
+  [params]
   (persistent!
    (reduce-kv
     (fn [result k v]
@@ -17,7 +24,11 @@
     params)))
 
 
-(defn encode-params [params]
+(defn encode-params
+  "
+  JSON-encode complex values of a map.
+  "
+  [params]
   (persistent!
    (reduce-kv
     (fn [result k v]
@@ -63,6 +74,7 @@
         request
         (cond-> request
 
+          ;; for GET, complex values must be JSON-encoded
           (= :get http-method)
           (assoc :query-params (encode-params params))
 
@@ -87,6 +99,7 @@
             (some-> content-type
                     (str/starts-with? "application/json"))
 
+            ;; parse JSON manually as Http Kit cannot
             body-json
             (if json?
               (-> body io/reader (json/decode-stream keyword))
@@ -229,6 +242,10 @@
                  :permissions permissions
                  :until_date until_date})))
 
+
+;;
+;; Dev
+;;
 
 #_
 (

@@ -8,7 +8,14 @@
     * "\u00D7"))
 
 
-(defn make-captcha [& [captcha-style]]
+(defn make-captcha
+  "
+  Retur a pair of captcha text and its solution, both strings.
+  If `captcha-style` is `:lisp`, build something like `(+ 2 1)`
+  rather than `2 + 1`. The operands are math unicode symbols
+  so the text cannot be evaluated without Unicode denormalization.
+  "
+  [& [captcha-style]]
   (let [var1
         (+ 5 (rand-int 5))
 

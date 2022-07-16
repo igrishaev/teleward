@@ -1,10 +1,6 @@
 
-- create a new bot
-- deploy
-- ansible?
-
-- telegram token secret
-- health uptime https://stackoverflow.com/questions/11357945/
-- print config at the beginning
 - update readme
+- health uptime https://stackoverflow.com/questions/11357945/
+- telegram token secret
+- print config at the beginning
 - lein release

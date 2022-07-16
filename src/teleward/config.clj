@@ -40,6 +40,10 @@
     :default (get-in defaults [:logging :level])
     :parse-fn keyword]
 
+   [nil "--telegram.offset-file OFFSET_FILE"
+    "Path to a file where Telegram stores pollling offset."
+    :default (get-in defaults [:telegram :offset-file])]
+
    [nil "--lang LANG" "Message language"
     :default (get-in defaults [:lang])
     :parse-fn keyword]
@@ -49,12 +53,20 @@
     :parse-fn keyword]])
 
 
-(defn kw->path [kw]
+(defn kw->path
+  "
+  :foo.bar => [:foo :bar]
+  "
+  [kw]
   (mapv keyword
         (-> kw name (str/split #"\."))))
 
 
-(defn cli-options->config [options]
+(defn cli-options->config
+  "
+  Turn CLI parsed options into a nested map.
+  "
+  [options]
   (reduce-kv
    (fn [result k v]
      (assoc-in result (kw->path k) v))

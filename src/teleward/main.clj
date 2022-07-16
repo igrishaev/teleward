@@ -1,4 +1,7 @@
 (ns teleward.main
+  "
+  The main entry point of the program.
+  "
   (:gen-class)
   (:require
    [teleward.version :as version]
@@ -39,7 +42,12 @@ $> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
     (poll/run-poll config)))
 
 
-(defn -main* [args]
+(defn -main*
+  "
+  An unsafe version of the main function.
+  Takes arguments as a single collection (not variadic & args).
+  "
+  [args]
 
   (let [opts-parsed
         (parse-opts args config/cli-opts)
@@ -67,6 +75,12 @@ $> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
 
 
 (defn -main
+  "
+  A protected version of main that catches any exception.
+  If an exception has `:exit/code` value in its ex-data,
+  we consider it as expected one and show just ex-message.
+  Otherwise, log the full exception.
+  "
   [& args]
   (try
     (-main* args)
