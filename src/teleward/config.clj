@@ -14,25 +14,12 @@
 
    :logging
    {:level :info
-    ;; :pattern
-    ;; :file
-
-
-
-    ;; :encoder :pattern
-    ;; :pattern "%p [%d] %t - %c %m%n"
-
-    ;; :console "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-
+    :pattern "%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"
     :console true
-
-    ;; :file {:file "..."}
-    ;; :overrides {"foo.bar.baz" :debug}
-    }
+    :file "logs/teleward.log"}
 
    :captcha
-   {:style "clojure"
-    :vars-count 2}
+   {:style :lisp}
 
    :polling
    {:offset-file "TELEGRAM_OFFSET"

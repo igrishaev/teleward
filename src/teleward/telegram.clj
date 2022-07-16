@@ -75,7 +75,7 @@
         @(http/request request)]
 
     (if error
-      (throw (ex-info (format "Telegram HTTP error: %s %s %s")
+      (throw (ex-info (format "Telegram HTTP error: %s" (ex-message error))
                       {:api-method api-method
                        :api-params params}
                       error))

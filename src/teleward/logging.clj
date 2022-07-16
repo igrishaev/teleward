@@ -9,35 +9,63 @@
    ch.qos.logback.classic.LoggerContext
    ch.qos.logback.classic.encoder.PatternLayoutEncoder
    ch.qos.logback.core.ConsoleAppender
-   ch.qos.logback.core.rolling.RollingFileAppender))
+   ch.qos.logback.core.FileAppender))
 
 
-(defn init-logging [& [config]]
+(defn kw->level ^Level [kw]
+  (case kw
+    :debug Level/DEBUG
+    :info Level/INFO
+    :error Level/ERROR
+    (throw (ex-info (format "Wrong logging level: %s" kw)
+                    {:level kw}))))
 
-  (let [log-context
+(defn init-logging [logging]
+
+  (let [{:keys [level
+                pattern
+                console
+                file]}
+        logging
+
+        log-context
         (LoggerFactory/getILoggerFactory)
 
         log-encoder
         (doto (new PatternLayoutEncoder)
           (.setContext log-context)
-          (.setPattern "%-12date{YYYY-MM-dd HH:mm:ss.SSS} %-5level - %msg%n")
+          (.setPattern pattern)
           (.start))
 
-        app-console
-        (doto (new ConsoleAppender)
-          (.setContext log-context)
-          (.setName "console")
-          (.setEncoder log-encoder)
-          (.start))
-
-        ^Logger logger
+        ^Logger root-logger
         (.getLogger log-context Logger/ROOT_LOGGER_NAME)]
 
-    (doto logger
+    (doto root-logger
       (.detachAndStopAllAppenders)
       (.setAdditive false)
-      (.setLevel Level/INFO)
-      (.addAppender app-console))))
+      (.setLevel (kw->level level)))
+
+    (when console
+      (let [app-console
+            (doto (new ConsoleAppender)
+              (.setContext log-context)
+              (.setName "console")
+              (.setEncoder log-encoder)
+              (.start))]
+        (.addAppender root-logger app-console)))
+
+    (when file
+      (let [app-file
+            (doto (new FileAppender)
+              (.setContext log-context)
+              (.setName "file")
+              (.setEncoder log-encoder)
+              (.setAppend true)
+              (.setFile file)
+              (.start))]
+        (.addAppender root-logger app-file)))
+
+    root-logger))
 
 
 ;;
@@ -49,6 +77,14 @@
 
  (require
   '[clojure.tools.logging :as log])
+
+ (def -logging
+   {:level :debug
+    :pattern "%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"
+    :console true
+    :file "logs/teleward.log"})
+
+ (init-logging -logging)
 
  (log/info "hello")
 
