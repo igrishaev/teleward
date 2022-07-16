@@ -18,8 +18,7 @@ graal-build:
 	--initialize-at-build-time \
 	--no-fallback \
 	--allow-incomplete-classpath \
-	-jar ./target/uberjar/BAXTEP.jar \
-	-H:IncludeResources='^logback.xml$$' \
+	-jar ./target/uberjar/teleward.jar \
 	-H:IncludeResources='^VERSION$$' \
 	--enable-url-protocols=http,https \
 	-H:ReflectionConfigurationFiles=reflection-config.json \
@@ -28,7 +27,7 @@ graal-build:
 	--initialize-at-run-time=com.fasterxml.jackson.databind.node.InternalNodeMapper \
 	-H:+ReportExceptionStackTraces \
 	-H:Log=registerResource \
-	-H:Name=./target/BAXTEP
+	-H:Name=./target/teleward
 
 docker-build: uberjar
 	docker-compose run compile
