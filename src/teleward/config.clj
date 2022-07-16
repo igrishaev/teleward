@@ -24,7 +24,7 @@
    :polling
    {:offset-file "TELEGRAM_OFFSET"
     :udpate-timeout 60
-    :message-expires 60
+    :message-expires (* 60 2)
     :user-trail-period 60
     :user-trail-attempts 3
     :solution-threshold 5}})

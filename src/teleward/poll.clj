@@ -125,9 +125,7 @@
           ;; delete captcha message
           (when captcha-message-id
             (with-safe-log
-              (tg/delete-message telegram chat-id captcha-message-id)))
-          ;; cheanup state
-          (del-attrs state chat-id member-id)))
+              (tg/delete-message telegram chat-id captcha-message-id)))))
 
       ;; check for commands
       (when (= text "/health")
@@ -162,10 +160,12 @@
               (let [attempt
                     (get-attr state chat-id user-id :attempt)]
                 (when (> attempt user-trail-attempts)
+                  (when captcha-message-id
+                    (with-safe-log
+                      (tg/delete-message telegram chat-id captcha-message-id)))
                   (with-safe-log
                     (tg/ban-user telegram chat-id user-id
-                                 {:revoke-messages true}))
-                  (del-attrs state chat-id user-id))))))))))
+                                 {:revoke-messages true})))))))))))
 
 
 (defn process-pending-users [config state]
