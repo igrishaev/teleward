@@ -10,6 +10,8 @@
     :timeout (* 65 1000)
     :keepalive (* 65 1000)}
 
+   :lang :ru
+
    :logging
    {:level :info
     ;; :pattern
@@ -35,7 +37,7 @@
    :polling
    {:offset-file "TELEGRAM_OFFSET"
     :udpate-timeout 60
-    :message-delay 60
+    :message-expires 60
     :user-trail-period 60
     :user-trail-attempts 3
     :solution-threshold 5}})

@@ -1,8 +1,10 @@
 
+- log/error top exception
+- print config at the beginning
 - telegram token secret
+- health command
 - update readme
 - lein release
-- apply config values
 - logging settings/file
 - cli params
 - create a new bot

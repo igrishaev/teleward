@@ -10,7 +10,7 @@
   [[lein-project-version "0.1.0"]]
 
   :dependencies
-  [[org.clojure/clojure "1.10.3"]
+  [[org.clojure/clojure "1.11.1"]
    [http-kit "2.6.0"]
    [cheshire "5.10.0"]
    [org.clojure/tools.cli "1.0.206"]

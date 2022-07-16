@@ -2,6 +2,7 @@
   (:require
    [teleward.captcha :as captcha]
    [teleward.telegram :as tg]
+   [teleward.locale :as locale]
    [cheshire.core :as json]
    [clojure.string :as str]
    [clojure.tools.logging :as log]))
@@ -38,22 +39,29 @@
   (swap! state update chat-id dissoc user-id))
 
 
-(defn looks-solution? [text]
+(defn looks-solution? [text len-threshold]
   (and
    (not (str/blank? text))
-   (<= (count text) 5)))
+   (<= (count text) len-threshold)))
 
 
-(defn almost-now [time]
-  (let [now (unix-now)
-        offset 60]
+(defn almost-now [time offset]
+  (let [now (unix-now)]
     (<= (- now offset) time (+ now offset))))
 
 
 (defn process-updates
-  [telegram state updates]
+  [config state updates]
 
-  (doseq [upd-entry updates
+  (doseq [{:keys [lang
+                  telegram]
+           {:keys [user-trail-attempts
+                   message-expires
+                   solution-threshold]}
+           :polling}
+          config
+
+          upd-entry updates
 
           :let
           [{:keys [message
@@ -76,7 +84,8 @@
            from]
 
           :when
-          (and message (almost-now date))]
+          (and message
+               (almost-now date message-expires))]
 
     ;; for each new member...
     (doseq [member new_chat_members
@@ -92,8 +101,7 @@
             (captcha/make-captcha)
 
             captcha-message
-            (format "Dear @%s, please solve that captcha message: %s"
-                    member-username captcha-text)
+            (locale/get-captcha-message lang member-username captcha-text)
 
             {captcha-message-id :message_id}
             (with-safe-log
@@ -131,7 +139,7 @@
         (with-safe-log
           (tg/delete-message telegram chat-id message_id))
 
-        (if (and (looks-solution? text)
+        (if (and (looks-solution? text solution-threshold)
                  (= (str/trim text) captcha-solution))
 
           (do
@@ -144,24 +152,27 @@
             (inc-attr state chat-id user-id :attempt)
             (let [attempt
                   (get-attr state chat-id user-id :attempt)]
-              (when (> attempt 3)
+              (when (> attempt user-trail-attempts)
                 (with-safe-log
                   (tg/ban-user telegram chat-id user-id
                                {:revoke-messages true}))
                 (del-attrs state chat-id user-id)))))))))
 
 
-(defn process-pending-users [telegram state]
-  (doseq [[chat-id user->attrs] @state
-          [user-id {:keys [date]}] user->attrs]
-    (when (and date (> (- (unix-now) date) 60))
-      (when-let [captcha-message-id
-                 (get-attr state chat-id user-id :captcha-message-id)]
+(defn process-pending-users [config state]
+  (let [{:keys [telegram]
+         {:keys [user-trail-period]} :polling}
+        config]
+    (doseq [[chat-id user->attrs] @state
+            [user-id {:keys [date]}] user->attrs]
+      (when (and date (> (- (unix-now) date) user-trail-period))
+        (when-let [captcha-message-id
+                   (get-attr state chat-id user-id :captcha-message-id)]
+          (with-safe-log
+            (tg/delete-message telegram chat-id captcha-message-id)))
         (with-safe-log
-          (tg/delete-message telegram chat-id captcha-message-id)))
-      (with-safe-log
-        (tg/ban-user telegram chat-id user-id {:revoke-messages true}))
-      (del-attrs state chat-id user-id))))
+          (tg/ban-user telegram chat-id user-id {:revoke-messages true}))
+        (del-attrs state chat-id user-id)))))
 
 
 (defn save-offset [offset-file offset]
@@ -177,11 +188,11 @@
 (defn run-poll
   [config]
 
-  (let [{:keys [telegram]}
+  (let [{{:keys [udpate-timeout
+                 offset-file]}
+         :polling
+         :keys [telegram]}
         config
-
-        offset-file
-        (-> config :polling :offset-file)
 
         state
         (atom {})
@@ -193,24 +204,24 @@
 
       (let [updates
             (with-safe-log
-              (tg/get-updates telegram {:offset offset
-                                        :timeout 60}))
+              (tg/get-updates telegram
+                              {:offset offset
+                               :timeout udpate-timeout}))
 
             new-offset
             (or (some-> updates peek :update_id inc)
                 offset)]
 
-        (log/infof "Got %s updates, next offset: %s"
-                   (count updates) new-offset)
-
-        (log/debugf "Updates:\n%s"
-                   (json/generate-string updates {:pretty true}))
+        (log/debugf "Got %s updates, next offset: %s, updates: %s"
+                    (count updates)
+                    new-offset
+                    (json/generate-string updates {:pretty true}))
 
         (when offset
           (save-offset offset-file new-offset))
 
-        (process-updates telegram state updates)
-        (process-pending-users telegram state)
+        (process-updates config state updates)
+        (process-pending-users config state)
 
         (recur new-offset)))))
 
