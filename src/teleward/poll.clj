@@ -165,7 +165,7 @@
 
 
 (defn save-offset [offset-file offset]
-  (spit  (str offset)))
+  (spit offset-file (str offset)))
 
 (defn load-offset [offset-file]
   (try

@@ -22,9 +22,6 @@ graal-build:
 	-H:IncludeResources='^VERSION$$' \
 	--enable-url-protocols=http,https \
 	-H:ReflectionConfigurationFiles=reflection-config.json \
-	--initialize-at-run-time=com.fasterxml.jackson.databind.DeserializationContext \
-	--initialize-at-run-time=com.fasterxml.jackson.databind.ObjectReader \
-	--initialize-at-run-time=com.fasterxml.jackson.databind.node.InternalNodeMapper \
 	-H:+ReportExceptionStackTraces \
 	-H:Log=registerResource \
 	-H:Name=./target/teleward
