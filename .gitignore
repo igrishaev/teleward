@@ -15,3 +15,7 @@ pom.xml.asc
 TELEGRAM_OFFSET
 VERSION
 logs/
+
+node_modules
+package-lock.json
+package.json
