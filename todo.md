@@ -1,12 +1,11 @@
 
-- log/error top exception
-- print config at the beginning
-- telegram token secret
 - health command
-- update readme
-- lein release
 - logging settings/file
 - cli params
+- update readme
+- telegram token secret
+- print config at the beginning
+- lein release
 - create a new bot
 - deploy
 - ansible?

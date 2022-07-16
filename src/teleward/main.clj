@@ -5,6 +5,7 @@
    [teleward.logging :as logging]
    [teleward.poll :as poll]
    [teleward.config :as config]
+   [clojure.tools.logging :as log]
    [clojure.tools.cli :refer [parse-opts]]))
 
 
@@ -61,18 +62,25 @@
     (-main* args)
     (catch Throwable e
 
-      (let [{:exit/keys [code message]}
+      (let [ex-context
             (ex-data e)
 
-            code
-            (or code 1)
+            {exit-code :exit/code}
+            ex-context
 
-            message
-            (or message (ex-message e))
+            expected?
+            (some? exit-code)
+
+            final-code
+            (or exit-code 1)
 
             out
-            (if (zero? code) *out* *err*)]
+            (if (zero? final-code) *out* *err*)]
 
         (binding [*out* out]
-          (println message)
-          (System/exit code))))))
+          (println (ex-message e)))
+
+        (when-not expected?
+          (log/errorf e "Unhandled exception, context: %s" ex-context))
+
+        (System/exit final-code)))))
