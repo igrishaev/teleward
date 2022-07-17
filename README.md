@@ -30,10 +30,9 @@ guess). Personally, I found Shieldy and other bots useless when dealing with suc
 kind of spammers. This bot aims the goal to finish that mess.
 
 Another reason I opened this project for is to try my skills in developing
-Clojure applications with GraalVM. My last experience with CLI client for
-Exoscale was positive, so I decided to move further. Binary applications built
-with Clojure are nice: they are fast, and they don't need installing JDK. At the
-same time, they're are still Clojure: REPL is here, and that's amazing.
+Clojure applications with GraalVM. Binary applications built with Clojure are
+nice: they are fast, and they don't need installing JDK. At the same time,
+they're are still Clojure: REPL is here, and that's amazing.
 
 ## Features
 
