@@ -1,5 +1,4 @@
 
-- lein release
 - first GH release
 
 - health uptime https://stackoverflow.com/questions/11357945/

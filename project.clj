@@ -9,6 +9,17 @@
   :plugins
   [[lein-project-version "0.1.0"]]
 
+  :release-tasks
+  [["vcs" "assert-committed"]
+   ["test"]
+   ["change" "version" "leiningen.release/bump-version" "release"]
+   ["vcs" "commit"]
+   ["vcs" "tag" "--no-sign"]
+   ["deploy"]
+   ["change" "version" "leiningen.release/bump-version"]
+   ["vcs" "commit"]
+   ["vcs" "push"]]
+
   :dependencies
   [[org.clojure/clojure "1.11.1"]
    [http-kit "2.6.0"]
