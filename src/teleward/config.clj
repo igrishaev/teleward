@@ -42,7 +42,7 @@
 
    [nil "--telegram.offset-file OFFSET_FILE"
     "Path to a file where Telegram stores pollling offset."
-    :default (get-in defaults [:telegram :offset-file])]
+    :default (get-in defaults [:polling :offset-file])]
 
    [nil "--lang LANG" "Message language"
     :default (get-in defaults [:lang])

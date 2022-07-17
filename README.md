@@ -13,9 +13,9 @@ image. Runs on bare Linux/MacOS with no requirements. Fast and robust.
 - [Java version](#java-version)
 - [Binary version, Linux](#binary-version-linux)
 - [Binary version, MacOS](#binary-version-macos)
-- [Running](#running)
-- [Deploying on bare Ubuntu](#deploying-on-bare-ubuntu)
+- [Setting Up Your Bot](#setting-up-your-bot)
 - [Configuration](#configuration)
+- [Deploying on bare Ubuntu](#deploying-on-bare-ubuntu)
 - [Health check](#health-check)
 - [Further work](#further-work)
 
@@ -111,9 +111,53 @@ gu install native-image
 make
 ```
 
-## Running
+## Setting Up Your Bot
 
-TODO
+- To run the bot, first you need a token. Contact `@BotFather` in Telegram to
+  create a new bot. Copy the token and don't share it.
+
+- Add your new bot into a Telegram group. Promote it to admin level. At least
+  the bot must be able to 1) send messages, 2) delete messages, and 3) ban
+  users.
+
+- Run locally:
+
+```bash
+teleward -t <telegram-token> -l debug
+```
+
+If everything is fine, the bot will start consuming the messages and print them
+in console.
+
+## Configuration
+
+See the version with `-v`, and help with `-h`. The bot takes into account plenty
+of settings, yet not all of them are available for configuration for now. Below,
+we name the most important parameters you will need.
+
+- `-t, --telegram.token`: the Telegram token you obtain from
+  BotFather. Required, can be set via an env variable `TELEGRAM_TOKEN`.
+
+- `-l, --logging.level`: the logging level. Can be `debug, info, error`. Default
+  is `info`. In production, most likely you need `error` for this.
+
+- `--telegram.offset-file`: where to store offset number for the next
+  `getUpdates` call. Default is `TELEGRAM_OFFSET` in the current working
+  directory.
+
+- `--lang`: the language for messages. Can be `en, ru`, default is `ru`.
+
+- `--captcha.style`: captcha style. Can be either `lisp` or anything else.
+
+Example:
+
+```bash
+./target/teleward -t <...> -l debug \
+  --lang=en --telegram.offset-file=mybot.offset \
+  --captcha.style=normal
+```
+
+For the rest of the config, see the `src/teleward/config.clj` file.
 
 ## Deploying on bare Ubuntu
 
@@ -176,10 +220,6 @@ sudo systemctl status teleward
 For Jar, the config file would be almost the same except the `ExecStart`
 section. There, you specify something like `java -jar teleward.jar ...`.
 
-## Configuration
-
-TODO
-
 ## Health check
 
 The bot accepts the `/health` command which it replies to "OK".
@@ -189,5 +229,6 @@ The bot accepts the `/health` command which it replies to "OK".
 - Implement webhook.
 - Add tests.
 - Report uptime for `/health`.
+- More config parameters via CLI args.
 
 &copy; 2022 Ivan Grishaev
