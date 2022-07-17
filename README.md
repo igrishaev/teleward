@@ -24,10 +24,10 @@ image. Runs on bare Linux/MacOS with no requirements. Fast and robust.
 ## Why
 
 To protect your Telegram channels from spam, obviously. Modern spammers are
-smart: they don't use the standard bots. Instead, they register ordinary
-accounts and then automate them with Selenium + web-version of Telegram (that's
-my guess). Personally I found Shieldy and other bots useless when dealing with
-such kind of spammers. This bot aims the goal to finish that mess.
+smart: they don't use standard bots. Instead, they register ordinary accounts
+and automate them with Selenium + web-version of Telegram (that's my
+guess). Personally, I found Shieldy and other bots useless when dealing with such
+kind of spammers. This bot aims the goal to finish that mess.
 
 Another reason I opened this project for is to try my skills in developing
 Clojure applications with GraalVM. My last experience with CLI client for
@@ -39,22 +39,22 @@ same time, they're are still Clojure: REPL is here, and that's amazing.
 
 - This is Clojure, so you have REPL! During development, you call Telegram API
   directly from REPL and see what's going on.
-- Can be delivered either as a Jar file or a binary file (Graal).
-- When Graal-compiled, needs no requirements (no Java SDK, etc). The binary size
-  is about 30 Mb.
+- The bot can be delivered either as a Jar file or a binary file (with Graal).
+- When Graal-compiled, needs no requirements (Java SDK, etc). The binary size is
+  about 30 Mb.
 - At the moment, supports only long polling strategy to obtain messages. The
   webhook is to be done soon.
 - Keeps all the state in memory and thus doesn't need any kind of a
-  database. The only exception is the current offset value which is tracked via
-  a file.
+  database. The only exception is the current offset value which is tracked in a
+  file.
 - Supports English and Russian languages.
 - Two captcha styles: normal "1 + 2" and Lisp captcha "(+ 1 2)".
-- The `+`, `-`, and `*` operators are corresponding Unicode characters which
-  prevents captcha from naive evaluation.
+- The `+`, `-`, and `*` operators are corresponding Unicode characters that
+  prevent captcha from naive evaluation.
 
 ## Algorithm
 
-The bot listens for all the messages in a group. One a new pack of messages
+The bot listens for all the messages in a group. Once a new pack of messages
 arrives, the bot applies the following procedure to each message:
 
 - Mark new members as locked.
@@ -65,12 +65,12 @@ arrives, the bot applies the following procedure to each message:
 - If a locked user has posted three messages with no solution, ban them.
 - If a locked user hasn't solved captcha in time, ban them as well.
 
-*Please note:* the bot processes only messages not older than two minutes from
+*Please note:* the bot processes only messages no older than two minutes from
 now. In other words, the bot is interested in what is happening now (with a
 slight delay), but not in the far past. This is to prevent a sutuation what a
-bot has been inactive and then started to consume messages. Without this
+bot had been inactive and then has started to consume messages. Without this
 condition, it will send captcha to chat members who have already joined and
-confuse people.
+confuse them.
 
 ## Java version
 
@@ -116,18 +116,17 @@ make
 - To run the bot, first you need a token. Contact `@BotFather` in Telegram to
   create a new bot. Copy the token and don't share it.
 
-- Add your new bot into a Telegram group. Promote it to admin level. At least
-  the bot must be able to 1) send messages, 2) delete messages, and 3) ban
-  users.
+- Add your new bot into a Telegram group. Promote it to admins. At least the bot
+  must be able to 1) send messages, 2) delete messages, and 3) ban users.
 
-- Run locally:
+- Run the bot locally:
 
 ```bash
 teleward -t <telegram-token> -l debug
 ```
 
-If everything is fine, the bot will start consuming the messages and print them
-in console.
+If everything is fine, the bot will start consuming messages and print them in
+console.
 
 ## Configuration
 
@@ -139,7 +138,7 @@ we name the most important parameters you will need.
   BotFather. Required, can be set via an env variable `TELEGRAM_TOKEN`.
 
 - `-l, --logging.level`: the logging level. Can be `debug, info, error`. Default
-  is `info`. In production, most likely you need `error` for this.
+  is `info`. In production, most likely you will set `error`.
 
 - `--telegram.offset-file`: where to store offset number for the next
   `getUpdates` call. Default is `TELEGRAM_OFFSET` in the current working
@@ -147,7 +146,9 @@ we name the most important parameters you will need.
 
 - `--lang`: the language for messages. Can be `en, ru`, default is `ru`.
 
-- `--captcha.style`: captcha style. Can be either `lisp` or anything else.
+- `--captcha.style`: a type of captcha. When `lisp`, the captcha looks like `(+
+  4 3)`. Any other value type will produce `4 + 3`. The operator is taken
+  randomly.
 
 Example:
 
@@ -209,7 +210,7 @@ WantedBy = multi-user.target
 sudo systemctl enable teleward
 ```
 
-- Manage the service within the commands:
+- Manage the service with commands:
 
 ```bash
 sudo systemctl stop teleward
