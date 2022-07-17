@@ -6,6 +6,9 @@
   :url
   "https://github.com/igrishaev/teleward"
 
+  :deploy-repositories
+  {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
+
   :plugins
   [[lein-project-version "0.1.0"]]
 
