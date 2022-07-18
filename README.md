@@ -230,5 +230,6 @@ The bot accepts the `/health` command which it replies to "OK".
 - Add tests.
 - Report uptime for `/health`.
 - More config parameters via CLI args.
+- Widnows build.
 
 &copy; 2022 Ivan Grishaev
