@@ -169,3 +169,34 @@
        {:text "c", :callback_data "ccc"}]]}},
    :chat_instance "-2767002656552552926",
    :data "ccc"}}]
+
+
+
+(import [java.awt Graphics2D Color Font]
+        [java.awt.image BufferedImage]
+        [javax.imageio ImageIO]
+        [java.io File])
+
+
+(def enumerate
+  (partial map-indexed vector))
+
+(defn str->img [string filename]
+  (let [file (File. (str "./" filename ".png"))
+        width 350
+        height 100
+        image (BufferedImage. width height BufferedImage/TYPE_INT_ARGB)
+        graphics (.createGraphics image)
+        font-size 30
+
+        ;; font (Font. "TimesRoman" Font/BOLD font-size)
+        font (Font. "Courier New" Font/BOLD font-size)
+        ]
+
+    (.setColor graphics Color/BLACK)
+    (.setFont graphics font)
+
+    (doseq [[i line] (enumerate (str/split string #"\r?\n"))]
+      (.drawString graphics line 10 (* (inc i) 25)))
+
+    (ImageIO/write image "png" file)))
