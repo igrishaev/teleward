@@ -40,6 +40,16 @@
     :default (get-in defaults [:logging :level])
     :parse-fn keyword]
 
+   [nil "--polling.user-trail-period TRIAL_PERIOD"
+    "How many seconds to wait before banning a user who hasn't solved captcha in time."
+    :default (get-in defaults [:polling :user-trail-period])
+    :parse-fn parse-long]
+
+   [nil "--polling.user-trail-attempts TRIAL_ATTEMPTS"
+    "How many attempts a user has to solve captcha."
+    :default (get-in defaults [:polling :user-trail-attempts])
+    :parse-fn parse-long]
+
    [nil "--telegram.offset-file OFFSET_FILE"
     "Path to a file where Telegram stores pollling offset."
     :default (get-in defaults [:polling :offset-file])]
