@@ -177,41 +177,44 @@
                    captcha-text
                    captcha-solution)
 
-          ;; delete its message anyway
-          (with-safe-log
-            (tg/delete-message telegram chat-id message_id))
+          ;; if it was a text message...
+          (when text
 
-          (if (and (looks-solution? text solution-threshold)
-                   (= (str/trim text) captcha-solution))
+            ;; ...delete it anyway
+            (with-safe-log
+              (tg/delete-message telegram chat-id message_id))
 
-            ;; if the user has solved the captcha,
-            ;; delete the captcha message and reset all the attributes
-            (do
-              (log/infof "Captcha solved, chat-id: %s, user-id: %s, solution: %s"
-                         chat-id user-id text)
-              (when captcha-message-id
-                (with-safe-log
-                  (tg/delete-message telegram chat-id captcha-message-id)))
-              (del-attrs state chat-id user-id))
+            ;; if the user has solved the captcha...
+            (if (and (looks-solution? text solution-threshold)
+                     (= (str/trim text) captcha-solution))
 
-            ;; increase the number of attempts. When the attempts are over,
-            ;; delete the captcha message and ban a user. But keep the attributes
-            ;; for the next stage.
-            (do
-              (log/infof "Failed captcha attempt, chat-id: %s, user-id: %s, solution: %s"
-                         chat-id user-id text)
-              (inc-attr state chat-id user-id :attempt)
-              (let [attempt
-                    (get-attr state chat-id user-id :attempt)]
-                (when (> attempt user-trail-attempts)
-                  (when captcha-message-id
-                    (with-safe-log
-                      (tg/delete-message telegram chat-id captcha-message-id)))
-                  (log/infof "User banned (captcha attempts), chat-id: %s, user-id: %s"
-                             chat-id user-id)
+              ;; ...delete the captcha message and reset all the attributes
+              (do
+                (log/infof "Captcha solved, chat-id: %s, user-id: %s, solution: %s"
+                           chat-id user-id text)
+                (when captcha-message-id
                   (with-safe-log
-                    (tg/ban-user telegram chat-id user-id
-                                 {:revoke-messages true})))))))))))
+                    (tg/delete-message telegram chat-id captcha-message-id)))
+                (del-attrs state chat-id user-id))
+
+              ;; otherwise, increase the number of attempts. When the attempts
+              ;; are over, delete the captcha message and ban a user. Keep the
+              ;; attributes for the next stage.
+              (do
+                (log/infof "Failed captcha attempt, chat-id: %s, user-id: %s, solution: %s"
+                           chat-id user-id text)
+                (inc-attr state chat-id user-id :attempt)
+                (let [attempt
+                      (get-attr state chat-id user-id :attempt)]
+                  (when (> attempt user-trail-attempts)
+                    (when captcha-message-id
+                      (with-safe-log
+                        (tg/delete-message telegram chat-id captcha-message-id)))
+                    (log/infof "User banned (captcha attempts), chat-id: %s, user-id: %s"
+                               chat-id user-id)
+                    (with-safe-log
+                      (tg/ban-user telegram chat-id user-id
+                                   {:revoke-messages true}))))))))))))
 
 
 (defn process-pending-users
