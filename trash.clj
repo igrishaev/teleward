@@ -200,3 +200,15 @@
       (.drawString graphics line 10 (* (inc i) 25)))
 
     (ImageIO/write image "png" file)))
+
+
+(-> {:url "https://api.telegram.org/bot.../sendPhoto"
+      :method :post
+      :as :stream
+      :multipart [{:name "chat_id" :content "-1001777560288"}
+                  {:name "caption" :content "Dear @foobar, please solve that captcha!"}
+                  {:name "photo" :content (clojure.java.io/file "aaa.png") :filename "aaa.png"}]}
+     http/request
+     deref
+     :body
+     slurp)
