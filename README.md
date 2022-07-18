@@ -23,11 +23,11 @@ image. Runs on bare Linux/MacOS with no requirements. Fast and robust.
 
 ## Why
 
-To protect your Telegram channels from spam, obviously. Modern spammers are
-smart: they don't use standard bots. Instead, they register ordinary accounts
-and automate them with Selenium + web-version of Telegram (that's my
-guess). Personally, I found Shieldy and other bots useless when dealing with
-such kind of spammers. This project aims the goal to finish that mess.
+Telegram chats suffer from spammers who are pretty smart nowadays. They don't
+use bots; instead, they register ordinary accounts and automate them with
+Selenium + web-version of Telegram. Personally, I found Shieldy and other bots
+useless when dealing with such kind of spammers. This project aims the goal to
+finish that mess.
 
 Another reason I opened Teleward for is to try my skills in developing Clojure
 applications with GraalVM. Binary applications are nice: they are fast, and they
