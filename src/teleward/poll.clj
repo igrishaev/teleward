@@ -126,6 +126,8 @@
         (set-attrs state chat-id member-id
                    {:locked? true :date date})
 
+        (log/infof "Locking a new member, chat-id: %s, user-id: %s, date: %s" chat-id member-id date)
+
         ;; send captcha
         (let [[captcha-text captcha-solution]
               (captcha/make-captcha captcha-style)
@@ -137,6 +139,9 @@
               {captcha-message-id :message_id}
               (with-safe-log
                 (tg/send-message telegram chat-id captcha-message))]
+
+          (log/infof "Captcha sent, chat-id: %s, user-id: %s, text: %s, solution: %s, message-id: %s"
+                     chat-id member-id captcha-text captcha-solution captcha-message-id)
 
           (set-attrs state chat-id member-id
                      {:captcha-text captcha-text
@@ -176,23 +181,25 @@
           (with-safe-log
             (tg/delete-message telegram chat-id message_id))
 
-
           (if (and (looks-solution? text solution-threshold)
                    (= (str/trim text) captcha-solution))
 
             ;; if the user has solved the captcha,
             ;; delete the captcha message and reset all the attributes
             (do
+              (log/infof "Captcha solved, chat-id: %s, user-id: %s, solution: %s"
+                         chat-id user-id text)
               (when captcha-message-id
                 (with-safe-log
                   (tg/delete-message telegram chat-id captcha-message-id)))
               (del-attrs state chat-id user-id))
 
-
             ;; increase the number of attempts. When the attempts are over,
             ;; delete the captcha message and ban a user. But keep the attributes
             ;; for the next stage.
             (do
+              (log/infof "Failed captcha attempt, chat-id: %s, user-id: %s, solution: %s"
+                         chat-id user-id text)
               (inc-attr state chat-id user-id :attempt)
               (let [attempt
                     (get-attr state chat-id user-id :attempt)]
@@ -200,6 +207,8 @@
                   (when captcha-message-id
                     (with-safe-log
                       (tg/delete-message telegram chat-id captcha-message-id)))
+                  (log/infof "User banned (captcha attempts), chat-id: %s, user-id: %s"
+                             chat-id user-id)
                   (with-safe-log
                     (tg/ban-user telegram chat-id user-id
                                  {:revoke-messages true})))))))))))
@@ -222,6 +231,8 @@
                    (get-attr state chat-id user-id :captcha-message-id)]
           (with-safe-log
             (tg/delete-message telegram chat-id captcha-message-id)))
+        (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, date joined: %s"
+                   chat-id user-id date)
         (with-safe-log
           (tg/ban-user telegram chat-id user-id {:revoke-messages true}))
         (del-attrs state chat-id user-id)))))
@@ -229,6 +240,7 @@
 
 (defn save-offset [offset-file offset]
   (spit offset-file (str offset)))
+
 
 (defn load-offset [offset-file]
   (try

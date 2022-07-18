@@ -1,5 +1,4 @@
 
-- log captcha test/solution
 - captcha image
 - settings command
 
