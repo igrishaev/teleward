@@ -1,5 +1,6 @@
 
 all: cleanup uberjar graal-build
+	cp ./target/teleward ./builds/teleward-macos-intel
 
 VERSION_FILE = resources/VERSION
 
@@ -28,9 +29,12 @@ graal-build:
 
 docker-build: uberjar
 	docker-compose run compile
+	cp ./target/teleward ./builds/teleward-linux
 
 toc-install:
 	npm install --save markdown-toc
 
 toc-build:
 	node_modules/.bin/markdown-toc -i README.md
+
+build-release: all docker-build
