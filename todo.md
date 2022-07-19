@@ -1,6 +1,4 @@
 
-- log messages when locked
-
 - logging/dict
 - captcha image
 - settings command
