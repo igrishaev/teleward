@@ -1,7 +1,7 @@
 
-- log member username
 - log messages when locked
 
+- logging/dict
 - captcha image
 - settings command
 - better command handling
