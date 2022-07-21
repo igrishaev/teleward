@@ -61,7 +61,7 @@
               (.start))]
         (.addAppender root-logger app-console)))
 
-    ;; just a Flippest for now although a rolling file would be better
+    ;; just a plain FileAppender for now although a rolling file would be better
     (when file
       (let [app-file
             (doto (new FileAppender)
