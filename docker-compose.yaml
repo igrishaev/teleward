@@ -4,7 +4,7 @@ services:
   compile:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.native-image
     working_dir: /build
     volumes:
       - .:/build

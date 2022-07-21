@@ -1,5 +1,5 @@
 
-local-build: cleanup uberjar graal-build
+build-binary-local: cleanup uberjar graal-build
 
 VERSION_FILE = resources/VERSION
 
@@ -28,7 +28,7 @@ graal-build:
 	-H:Log=registerResource \
 	-H:Name=./builds/${BINARY_FILE}
 
-docker-build: uberjar
+build-binary-docker: uberjar
 	docker-compose run compile
 
 toc-install:
@@ -37,4 +37,12 @@ toc-install:
 toc-build:
 	node_modules/.bin/markdown-toc -i README.md
 
-release-build: local-build docker-build
+release-build: build-binary-local build-binary-docker
+
+TAG = teleward:latest
+
+docker-build:
+	docker build --no-cache -t ${TAG} -f Dockerfile .
+
+docker-run:
+	docker run -it --rm ${TAG}
