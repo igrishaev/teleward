@@ -25,6 +25,8 @@ jobs:
       id-token: write
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
     - uses: mr-smithers-excellent/docker-build-push@v5
       with:
         image: ${{ env.IMAGE_NAME }}
