@@ -1,8 +1,9 @@
 
-all: cleanup uberjar graal-build
-	cp ./target/teleward ./builds/teleward-macos-intel
+local-build: cleanup uberjar graal-build
 
 VERSION_FILE = resources/VERSION
+
+BINARY_FILE = teleward-$(shell uname -s)-$(shell uname -m)
 
 cleanup:
 	rm -rf target
@@ -25,11 +26,10 @@ graal-build:
 	-H:ReflectionConfigurationFiles=reflection-config.json \
 	-H:+ReportExceptionStackTraces \
 	-H:Log=registerResource \
-	-H:Name=./target/teleward
+	-H:Name=./builds/${BINARY_FILE}
 
 docker-build: uberjar
 	docker-compose run compile
-	cp ./target/teleward ./builds/teleward-linux
 
 toc-install:
 	npm install --save markdown-toc
@@ -37,4 +37,4 @@ toc-install:
 toc-build:
 	node_modules/.bin/markdown-toc -i README.md
 
-build-release: all docker-build
+release-build: local-build docker-build
