@@ -1,4 +1,5 @@
 
+- add docker image
 - check if username null
 - logging/dict
 - captcha image

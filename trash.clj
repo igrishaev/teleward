@@ -212,3 +212,28 @@
      deref
      :body
      slurp)
+
+
+[ {
+  "update_id" : 75641300,
+  "message" : {
+    "message_id" : 210,
+    "from" : {
+      "id" : 223429441,
+      "is_bot" : false,
+      "first_name" : "Ivan",
+      "last_name" : "Grishaev",
+      "username" : "igrishaev"
+    },
+    "chat" : {
+      "id" : -1001777560288,
+      "title" : "sss",
+      "username" : "sdasdsdasdd",
+      "type" : "supergroup"
+    },
+    "date" : 1658391096,
+    "forward_sender_name" : "Stanislav Sidorenko",
+    "forward_date" : 1658329123,
+    "text" : "Иксы такие иксы."
+  }
+} ]

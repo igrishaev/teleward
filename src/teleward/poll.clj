@@ -100,6 +100,8 @@
                      from
                      date
                      text
+                     ;; forward_date
+                     ;; forward_sender_name
                      message_id
                      new_chat_members
                      left_chat_member]}
@@ -183,18 +185,16 @@
                    captcha-text
                    captcha-solution)
 
+          ;; log and drop any message from this user
+          (log/infof "Message from a locked user, chat-id: %s, user-id: %s, username: %s, text: %s"
+                     chat-id user-id user-name text)
+          (with-safe-log
+              (tg/delete-message telegram chat-id message_id))
+
           ;; if it was a text message...
           (when text
 
-            ;; ...log it
-            (log/infof "Message from a locked user, chat-id: %s, user-id: %s, username: %s, text: %s"
-                       chat-id user-id user-name text)
-
-            ;; ...and delete it anyway
-            (with-safe-log
-              (tg/delete-message telegram chat-id message_id))
-
-            ;; if the user has solved the captcha...
+            ;; ...and it solves the captcha...
             (if (and (looks-solution? text solution-threshold)
                      (= (str/trim text) captcha-solution))
 
