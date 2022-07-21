@@ -89,10 +89,10 @@ Linux version is built inside a Docker image, namely the
 the following command:
 
 ```bash
-make docker-build
+make build-binary-docker
 ```
 
-The output binary file appears at `./target/teleward`.
+The output binary file appears at `./builds/teleward-Linux-x86_64`.
 
 ## Binary version, MacOS
 
@@ -108,7 +108,11 @@ gu install native-image
 
 ```bash
 make
+# or
+make build-binary-local
 ```
+
+The output will be `./builds/teleward-Darwin-x86_64`.
 
 ## Setting Up Your Bot
 
@@ -174,7 +178,7 @@ mkdir /home/ivan/teleward
 - Compile the file locally and copy it to the machine:
 
 ```bash
-scp ./target/teleward ivan@hostname:/home/ivan/teleward/
+scp ./builds/teleward-Linux-x86_64 ivan@hostname:/home/ivan/teleward/
 ```
 
 - Create a new `systemctl` service:
@@ -196,7 +200,7 @@ Restart = always
 RestartSec = 1
 User = ivan
 WorkingDirectory = /home/ivan/teleward/
-ExecStart = /home/ivan/teleward/teleward -l debug
+ExecStart = /home/ivan/teleward/teleward-Linux-x86_64 -l debug
 Environment = TELEGRAM_TOKEN=xxxxxxxxxxxxxx
 
 [Install]
