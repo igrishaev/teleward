@@ -5,12 +5,6 @@ on:
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "ci" ]
-
-env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  IMAGE_NAME: teleward
-
 jobs:
   build:
 
@@ -29,10 +23,8 @@ jobs:
     - name: Build binary
       run: make build-binary-docker
 
-    - uses: mr-smithers-excellent/docker-build-push@v5
+    - name: Publish Image
+      uses: matootie/github-docker@v3.1.0
       with:
-        image: ${{ env.IMAGE_NAME }}
-        registry: ${{ env.REGISTRY }}
-        username: ${{ secrets.GHCR_USERNAME }}
-        password: ${{ secrets.GHCR_TOKEN }}
-        dockerfile: Dockerfile
+       accessToken: ${{ github.token }}
+       tag: latest
