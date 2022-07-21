@@ -27,6 +27,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+
     - uses: mr-smithers-excellent/docker-build-push@v5
       with:
         image: ${{ env.IMAGE_NAME }}
@@ -34,3 +35,4 @@ jobs:
         githubOrg: override-org # optional
         username: ${{ secrets.GHCR_USERNAME }}
         password: ${{ secrets.GHCR_TOKEN }}
+        dockerfile: Dockerfile
