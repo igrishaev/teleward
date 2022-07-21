@@ -35,7 +35,6 @@ jobs:
       with:
         image: ${{ env.IMAGE_NAME }}
         registry: ${{ env.REGISTRY }}
-        githubOrg: override-org # optional
         username: ${{ secrets.GHCR_USERNAME }}
         password: ${{ secrets.GHCR_TOKEN }}
         dockerfile: Dockerfile
