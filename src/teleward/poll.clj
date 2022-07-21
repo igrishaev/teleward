@@ -185,11 +185,13 @@
                    captcha-text
                    captcha-solution)
 
-          ;; log and drop any message from this user
-          (log/infof "Message from a locked user, chat-id: %s, user-id: %s, username: %s, text: %s"
-                     chat-id user-id user-name text)
-          (with-safe-log
-              (tg/delete-message telegram chat-id message_id))
+          ;; ...and the message was not about a newcomer...
+          (when-not new_chat_members
+            ;; ...log and delete it
+            (log/infof "Message from a locked user, chat-id: %s, user-id: %s, username: %s, text: %s"
+                       chat-id user-id user-name text)
+            (with-safe-log
+              (tg/delete-message telegram chat-id message_id)))
 
           ;; if it was a text message...
           (when text
