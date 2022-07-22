@@ -7,6 +7,7 @@
    [teleward.version :as version]
    [teleward.logging :as logging]
    [teleward.poll :as poll]
+   [teleward.webhook :as webhook]
    [teleward.config :as config]
    [clojure.tools.logging :as log]
    [clojure.tools.cli :refer [parse-opts]]))
@@ -34,12 +35,26 @@ $> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
   (println summary))
 
 
-(defn start-polling [cli-options]
+(defn start-work [cli-options]
   (let [config
-        (config/make-config cli-options)]
+        (config/make-config cli-options)
+
+        {:keys [mode]}
+        cli-options]
+
     (config/validate-config! config)
     (logging/init-logging (:logging config))
-    (poll/run-poll config)))
+
+    (case mode
+
+      :polling
+      (poll/run-poll config)
+
+      :webhook
+      (webhook/run-webhook config)
+
+      ;; else
+      nil)))
 
 
 (defn -main*
@@ -71,7 +86,7 @@ $> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
       (handle-help summary)
 
       :else
-      (start-polling options))))
+      (start-work options))))
 
 
 (defn -main

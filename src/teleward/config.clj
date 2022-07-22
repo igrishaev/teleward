@@ -12,6 +12,8 @@
 
    :lang :ru
 
+   :mode :polling
+
    :logging
    {:level :info
     :pattern "%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"
@@ -27,7 +29,10 @@
     :message-expires (* 60 2)
     :user-trail-period 60
     :user-trail-attempts 3
-    :solution-threshold 5}})
+    :solution-threshold 5}
+
+   :webhook
+   {:path "/telegram/webhook"}})
 
 
 (def cli-opts
@@ -38,6 +43,10 @@
 
    ["-l" "--logging.level LEVEL" "Logging level"
     :default (get-in defaults [:logging :level])
+    :parse-fn keyword]
+
+   ["-m" "--mode MODE" "Working mode: polling or webhook"
+    :default (get-in defaults [:mode])
     :parse-fn keyword]
 
    [nil "--polling.user-trail-period TRIAL_PERIOD"
