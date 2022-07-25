@@ -3,56 +3,13 @@
    [teleward.captcha :as captcha]
    [teleward.telegram :as tg]
    [teleward.locale :as locale]
+   [teleward.state :as state]
    [cheshire.core :as json]
    [clojure.string :as str]
+   [teleward.util :refer [with-safe-log]]
+   [teleward.time :refer [unix-now]]
    [clojure.tools.logging :as log]))
 
-
-(defmacro with-safe-log
-  "
-  A macro to wrap Telegram calls (prevent the whole program from crushing).
-  "
-  [& body]
-  `(try
-     ~@body
-     (catch Throwable e#
-       (log/error (ex-message e#)))))
-
-
-(defn unix-now []
-  (quot (System/currentTimeMillis) 1000))
-
-
-;;
-;; A bunch of functions to track the state of the world.
-;; The content of the state atom is a map like this:
-;; chat-id => user => {attrs}
-;; The functions provide CRUD operations for a single attribute
-;; and multiple attributes as well (with -s at the end).
-;;
-
-(defn set-attr [state chat-id user-id attr val]
-  (swap! state assoc-in [chat-id user-id attr] val))
-
-(defn get-attr [state chat-id user-id attr]
-  (get-in @state [chat-id user-id attr]))
-
-(defn del-attr [state chat-id user-id attr]
-  (swap! state update-in [chat-id user-id] dissoc attr))
-
-(defn inc-attr [state chat-id user-id attr]
-  (swap! state update-in [chat-id user-id attr] (fnil inc 0)))
-
-(defn set-attrs [state chat-id user-id mapping]
-  (swap! state update-in [chat-id user-id] merge mapping))
-
-(defn get-attrs [state chat-id user-id]
-  (get-in @state [chat-id user-id]))
-
-(defn del-attrs [state chat-id user-id]
-  (swap! state update chat-id dissoc user-id))
-
-;;
 
 (defn looks-solution?
   "
@@ -123,11 +80,11 @@
               :when (not= my-id member-id)]
 
         ;; mark it as locked
-        (set-attrs state chat-id member-id
-                   {:locked? true
-                    :date-joined date
-                    :joined-message-id message_id
-                    :username user-name})
+        (state/set-attrs state chat-id member-id
+                         {:locked? true
+                          :date-joined date
+                          :joined-message-id message_id
+                          :username user-name})
 
         (log/infof "Locking a new member, chat-id: %s, user-id: %s, username: %s, date: %s"
                    chat-id member-id member-username date)
@@ -147,17 +104,17 @@
           (log/infof "Captcha sent, chat-id: %s, user-id: %s, username: %s, text: %s, solution: %s, message-id: %s"
                      chat-id member-id member-username captcha-text captcha-solution captcha-message-id)
 
-          (set-attrs state chat-id member-id
-                     {:captcha-text captcha-text
-                      :captcha-solution captcha-solution
-                      :captcha-message-id captcha-message-id})))
+          (state/set-attrs state chat-id member-id
+                           {:captcha-text captcha-text
+                            :captcha-solution captcha-solution
+                            :captcha-message-id captcha-message-id})))
 
       ;; check left members
       (when left_chat_member
         (let [{member-id :id}
               left_chat_member
               captcha-message-id
-              (get-attr state chat-id member-id :captcha-message-id)]
+              (state/get-attr state chat-id member-id :captcha-message-id)]
           ;; just delete captcha message
           (when captcha-message-id
             (with-safe-log
@@ -175,7 +132,7 @@
                     captcha-solution
                     captcha-message-id
                     joined-message-id]}
-            (get-attrs state chat-id user-id)]
+            (state/get-attrs state chat-id user-id)]
 
         ;; if the current user is locked...
         (when (and locked?
@@ -204,7 +161,7 @@
                 (when captcha-message-id
                   (with-safe-log
                     (tg/delete-message telegram chat-id captcha-message-id)))
-                (del-attrs state chat-id user-id))
+                (state/del-attrs state chat-id user-id))
 
               ;; otherwise, increase the number of attempts. When the attempts
               ;; are over, delete the captcha message and ban a user. Keep the
@@ -212,9 +169,9 @@
               (do
                 (log/infof "Failed captcha attempt, chat-id: %s, user-id: %s, username: %s, solution: %s"
                            chat-id user-id user-name text)
-                (inc-attr state chat-id user-id :attempt)
+                (state/inc-attr state chat-id user-id :attempt)
                 (let [attempt
-                      (get-attr state chat-id user-id :attempt)]
+                      (state/get-attr state chat-id user-id :attempt)]
                   (when (> attempt user-trail-attempts)
                     (when captcha-message-id
                       (with-safe-log
@@ -242,24 +199,35 @@
   Delete the captcha message, ban the user, drop the attributes.
   "
   [config state]
+
   (let [{:keys [telegram]
          {:keys [user-trail-period]} :polling}
         config]
-    (doseq [[chat-id user->attrs] @state
-            [user-id {:keys [date-joined
-                             captcha-message-id
-                             joined-message-id
-                             username]}] user->attrs]
-      (when (and date-joined
-                 (> (- (unix-now) date-joined) user-trail-period))
-        (when captcha-message-id
+
+    (doseq [[chat-id user-id attrs]
+            (state/iter-attrs state)]
+
+      (let [{:keys [username
+                    date-joined
+                    joined-message-id
+                    captcha-message-id]}
+            attrs]
+
+        (when (and date-joined
+                   (> (- (unix-now) date-joined) user-trail-period))
+
+          (when captcha-message-id
+            (with-safe-log
+              (tg/delete-message telegram chat-id captcha-message-id)))
+
           (with-safe-log
-            (tg/delete-message telegram chat-id captcha-message-id)))
-        (with-safe-log
-          (tg/ban-user telegram chat-id user-id {:revoke-messages true}))
-        (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, username: %s, date joined: %s"
-                   chat-id user-id username date-joined)
-        (when joined-message-id
-          (with-safe-log
-            (tg/delete-message telegram chat-id joined-message-id)))
-        (del-attrs state chat-id user-id)))))
+            (tg/ban-user telegram chat-id user-id {:revoke-messages true}))
+
+          (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, username: %s, date joined: %s"
+                     chat-id user-id username date-joined)
+
+          (when joined-message-id
+            (with-safe-log
+              (tg/delete-message telegram chat-id joined-message-id)))
+
+          (state/del-attrs state chat-id user-id))))))

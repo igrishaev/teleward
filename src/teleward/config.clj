@@ -32,7 +32,9 @@
     :solution-threshold 5}
 
    :webhook
-   {:path "/telegram/webhook"}})
+   {:path "/telegram/webhook"
+    :server {:host "0.0.0.0"
+             :port 8090}}})
 
 
 (def cli-opts

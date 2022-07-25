@@ -1,22 +1,32 @@
 (ns teleward.webhook
   (:require
-   [clojure.java.io :as io]
    [cheshire.core :as json]
-   [teleward.telegram :as tg]
+   [clojure.java.io :as io]
+   [clojure.tools.logging :as log]
+   [org.httpkit.server :as server]
    [teleward.processing :as processing]
-   [org.httpkit.server :as server])
+   [teleward.state :as state]
+   [teleward.telegram :as tg])
   (:import
    java.util.Timer
    java.util.TimerTask))
 
 
-(defn handler [request config state me]
-  (when-let [update-entry
-             (some-> request
-                     :body
-                     io/reader
-                     json/parse-stream)]
-    (processing/process-update config state update-entry me))
+(defn handle-request [request config state me]
+
+  (let [update-entry
+        (some-> request
+                :body
+                io/reader
+                json/parse-stream)]
+
+    (log/debugf "Incoming update: %s"
+                (when update-entry
+                  (json/generate-string update-entry {:pretty true})))
+
+    (when update-entry
+      (processing/process-update config state update-entry me)))
+
   {:status 200 :body "OK"})
 
 
@@ -34,28 +44,56 @@
         timer-task
         (proxy [TimerTask] []
           (run []
-            (processing/process-pending-users config state)))]
+            (log/debugf "Running cron job, every: %s" every-ms)
+            (processing/process-pending-users config state)))
 
-    (.scheduleAtFixedRate timer timer-task every-ms every-ms)))
+        result
+        (.scheduleAtFixedRate timer timer-task every-ms every-ms)]
+
+    (log/infof "Cron timer has been started, every: %s" every-ms)
+
+    result))
 
 
 (defn run-server [config state me]
 
   (let [server-config
-        {}
+        (-> config :webhook :server)
+
+        {:keys [port host]}
+        server-config
 
         webhook-path
         (-> config :webhook :path)
 
-        app
-        (fn [{:as request :keys [uri]}]
-          (cond
-            (= webhook-path uri)
-            (handler request config state me)
-            :else
-            {:status 404 :body "not found"}))]
+        router
+        (fn [request]
 
-    (server/run-server app server-config)))
+          (let [{:keys [uri
+                        content-type
+                        content-length
+                        request-method]}
+                request]
+
+            (log/debugf "HTTP request: %s %s %s %s"
+                        request-method uri content-type content-length)
+
+            (cond
+
+              (and (= :post request-method)
+                   (= webhook-path uri))
+              (handle-request request config state me)
+
+              :else
+              {:status 404 :body "not found"})))
+
+        server
+        (server/run-server router server-config)]
+
+    (log/infof "HTTP server has been started, host: %s, port: %s"
+               host port)
+
+    server))
 
 
 (defn run-webhook [config]
@@ -66,7 +104,7 @@
         (tg/get-me telegram)
 
         state
-        (atom {})]
+        (state/make-state)]
 
     (run-cron-task config state me)
     (run-server config state me)))

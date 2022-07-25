@@ -48,7 +48,7 @@ $> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
     (case mode
 
       :polling
-      (poll/run-poll config)
+      (poll/run-polling config)
 
       :webhook
       (webhook/run-webhook config)
