@@ -33,7 +33,7 @@
 
    :webhook
    {:path "/telegram/webhook"
-    :server {:host "0.0.0.0"
+    :server {:host "localhost"
              :port 8090}}})
 
 

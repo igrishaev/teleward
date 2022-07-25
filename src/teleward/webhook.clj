@@ -18,7 +18,7 @@
         (some-> request
                 :body
                 io/reader
-                json/parse-stream)]
+                (json/parse-stream keyword))]
 
     (log/debugf "Incoming update: %s"
                 (when update-entry
