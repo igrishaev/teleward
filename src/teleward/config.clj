@@ -51,6 +51,16 @@
     :default (get-in defaults [:mode])
     :parse-fn keyword]
 
+   [nil "--webhook.path PATH" "Path for webhook handler"
+    :default (get-in defaults [:webhook :path])]
+
+   [nil "--webhook.server.host HOST" "Host to listen in webhook mode"
+    :default (get-in defaults [:webhook :server :host])]
+
+   ["-p" "--webhook.server.port PORT" "Port to listen in webhook mode"
+    :default (get-in defaults [:webhook :server :port])
+    :parse-fn parse-long]
+
    [nil "--polling.user-trail-period TRIAL_PERIOD"
     "How many seconds to wait before banning a user who hasn't solved captcha in time."
     :default (get-in defaults [:polling :user-trail-period])

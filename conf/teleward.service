@@ -1,0 +1,17 @@
+# sudo mcedit /etc/systemd/system/teleward.service
+
+[Unit]
+Description = Teleward bot
+After = network.target
+
+[Service]
+Type = simple
+Restart = always
+RestartSec = 1
+User = ivan
+WorkingDirectory = /home/ivan/teleward/
+ExecStart = /home/ivan/teleward/teleward-Linux-x86_64 -m webhook -p 8090 -l debug --polling.user-trail-period=30 --polling.user-trail-attempts=2
+Environment = TELEGRAM_TOKEN=...
+
+[Install]
+WantedBy = multi-user.target
