@@ -46,3 +46,6 @@ docker-build:
 
 docker-run:
 	docker run -it --rm ${TAG}
+
+lint:
+	clj-kondo --lint src

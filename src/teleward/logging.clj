@@ -6,13 +6,10 @@
   2) it doesn't work with GraalVM/native-image.
   See https://stackoverflow.com/questions/16910955/
   "
-  (:require
-   [clojure.tools.logging :as log])
   (:import
    org.slf4j.LoggerFactory
    ch.qos.logback.classic.Level
    ch.qos.logback.classic.Logger
-   ch.qos.logback.classic.LoggerContext
    ch.qos.logback.classic.encoder.PatternLayoutEncoder
    ch.qos.logback.core.ConsoleAppender
    ch.qos.logback.core.FileAppender))

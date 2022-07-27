@@ -30,7 +30,7 @@
   {:status 200 :body "OK"})
 
 
-(defn run-cron-task [config state me]
+(defn run-cron-task [config state]
 
   (let [timer
         (new Timer "teleward" false)
@@ -106,5 +106,5 @@
         state
         (state/make-state)]
 
-    (run-cron-task config state me)
+    (run-cron-task config state)
     (run-server config state me)))

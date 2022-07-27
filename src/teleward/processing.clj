@@ -4,7 +4,6 @@
    [teleward.telegram :as tg]
    [teleward.locale :as locale]
    [teleward.state :as state]
-   [cheshire.core :as json]
    [clojure.string :as str]
    [teleward.util :refer [with-safe-log]]
    [teleward.time :refer [unix-now]]
@@ -43,8 +42,7 @@
          {captcha-style :style} :captcha}
         config
 
-        {:keys [message
-                update_id]}
+        {:keys [message]}
         update-entry
 
         {:keys [chat

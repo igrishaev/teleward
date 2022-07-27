@@ -6,7 +6,7 @@
    [clojure.string :as str]))
 
 
-(def captcha-templates
+(def captcha-templates-raw
   {:en
    "
 Hello @%s! In order to participate, please provide an answer to the following arithmetic expression:
@@ -27,7 +27,7 @@ Until then, your messages will be deleted, and you will be kicked soon. Thank yo
 
 
 (def captcha-templates
-  (update-vals captcha-templates str/trim))
+  (update-vals captcha-templates-raw str/trim))
 
 
 (defn get-captcha-message

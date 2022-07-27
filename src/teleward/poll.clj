@@ -1,13 +1,10 @@
 (ns teleward.poll
   (:require
-   [teleward.captcha :as captcha]
    [teleward.telegram :as tg]
-   [teleward.locale :as locale]
    [cheshire.core :as json]
    [teleward.state :as state]
    [teleward.util :refer [with-safe-log]]
    [teleward.processing :as processing]
-   [clojure.string :as str]
    [clojure.tools.logging :as log]))
 
 

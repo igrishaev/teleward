@@ -67,12 +67,11 @@ $> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
   (let [opts-parsed
         (parse-opts args config/cli-opts)
 
-        {:keys [options arguments errors summary]}
+        {:keys [options _arguments errors summary]}
         opts-parsed
 
         {:keys [help version]}
         options]
-
 
     (cond
 
