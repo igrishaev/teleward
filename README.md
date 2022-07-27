@@ -16,6 +16,7 @@ image. Runs on bare Linux/MacOS with no requirements. Fast and robust.
 - [Setting Up Your Bot](#setting-up-your-bot)
 - [Configuration](#configuration)
 - [Deploying on bare Ubuntu](#deploying-on-bare-ubuntu)
+- [Webhook mode](#webhook-mode)
 - [Health check](#health-check)
 - [Further work](#further-work)
 
@@ -41,8 +42,7 @@ here, and that's amazing.
 - The bot can be delivered either as a Jar file or a binary file (with Graal).
 - When Graal-compiled, needs no requirements (Java SDK, etc). The binary size is
   about 30 Mb.
-- At the moment, supports only long polling strategy to obtain messages. The
-  webhook is to be done soon.
+- Supports both long polling and webhook modes to obtain messages.
 - Keeps all the state in memory and thus doesn't need any kind of a
   database. The only exception is the current offset value which is tracked in a
   file.
@@ -140,6 +140,15 @@ we name the most important parameters you will need.
 - `-t, --telegram.token`: the Telegram token you obtain from
   BotFather. Required, can be set via an env variable `TELEGRAM_TOKEN`.
 
+- `-m, --mode`: Working mode. Either `polling` or `webhook`, default is polling.
+
+- `--webhook.path`: Webhook path, default is `/telegram/webhook`.
+
+- `--webhook.server.host`: Hostname of the webhook server, default is
+  `localhost`.
+
+- `-p, --webhook.server.port`: Port to listen in webhook mode, default is 8090.
+
 - `-l, --logging.level`: the logging level. Can be `debug, info, error`. Default
   is `info`. In production, most likely you will set `error`.
 
@@ -224,16 +233,35 @@ sudo systemctl status teleward
 For Jar, the config file would be almost the same except the `ExecStart`
 section. There, you specify something like `java -jar teleward.jar ...`.
 
+## Webhook mode
+
+In the `teleward.service` file, specify the `-m webhook` parameter:
+
+```
+ExecStart = .../teleward-Linux-x86_64 -m webhook -p 8090 ...
+```
+
+Install Caddy server for SSL. Modify its service config:
+
+```
+# sudo mcedit /lib/systemd/system/caddy.service
+
+[Service]
+ExecStart=caddy reverse-proxy --from <DOMAIN> --to localhost:8090
+```
+
+See the `/conf` directory for configuration.
+
 ## Health check
 
 The bot accepts the `/health` command which it replies to "OK".
 
 ## Further work
 
-- Implement webhook.
 - Add tests.
 - Report uptime for `/health`.
 - More config parameters via CLI args.
+- Better config handling.
 - Widnows build.
 
 &copy; 2022 Ivan Grishaev

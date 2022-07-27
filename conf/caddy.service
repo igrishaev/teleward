@@ -1,4 +1,4 @@
 # sudo mcedit /lib/systemd/system/caddy.service
 
 [Service]
-ExecStart=caddy reverse-proxy --from teleward.org --to localhost:8090
+ExecStart=caddy reverse-proxy --from <DOMAIN> --to localhost:8090

@@ -21,9 +21,14 @@ sudo netfilter-persistent save
 
 # logs
 tail -n 100 -f teleward/logs/teleward.log
-
+ssh $REMOTE tail -n 100 -f teleward/logs/teleward.log
 
 # webhook
 curl https://api.telegram.org/bot$TELEGRAM_TOKEN/getWebhookInfo | jq
 curl -F "url=https://$DOMAIN/telegram/webhook" https://api.telegram.org/bot$TELEGRAM_TOKEN/setWebhook | jq
 curl -X POST https://api.telegram.org/bot$TELEGRAM_TOKEN/deleteWebhook | jq
+
+
+# deploy
+ssh $REMOTE mkdir /home/ivan/teleward
+scp ./builds/teleward-Linux-x86_64 $REMOTE:/home/ivan/teleward/
