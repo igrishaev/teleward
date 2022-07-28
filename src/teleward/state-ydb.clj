@@ -56,4 +56,5 @@
 (defn make-state []
   {:access-key (System/getenv "AWS_ACCESS_KEY_ID")
    :secret-key (System/getenv "AWS_SECRET_ACCESS_KEY")
-   :endpoint (System/getenv "DYNAMODB_ENDPOINT")})
+   :endpoint (System/getenv "DYNAMODB_ENDPOINT")
+   })
