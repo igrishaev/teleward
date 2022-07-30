@@ -17,7 +17,8 @@
      :expr-attr-vals {":val" val}}))
 
 (defn get-attr [state chat-id user-id attr]
-  (far/get-item state table {:chat_id chat-id :user_id user-id}) attr)
+  (attr
+    (far/get-item state table {:chat_id chat-id :user_id user-id})))
 
 (defn del-attr [state chat-id user-id attr]
   (far/update-item state table
@@ -55,5 +56,4 @@
 (defn make-state []
   {:access-key (System/getenv "AWS_ACCESS_KEY_ID")
    :secret-key (System/getenv "AWS_SECRET_ACCESS_KEY")
-   :endpoint (System/getenv "DYNAMODB_ENDPOINT")
-   })
+   :endpoint (System/getenv "DYNAMODB_ENDPOINT")})
