@@ -1,13 +1,13 @@
 (ns teleward.processing
   (:require
-   [teleward.captcha :as captcha]
-   [teleward.telegram :as tg]
-   [teleward.locale :as locale]
-   [teleward.state :as state]
    [clojure.string :as str]
-   [teleward.util :refer [with-safe-log]]
+   [clojure.tools.logging :as log]
+   [teleward.captcha :as captcha]
+   [teleward.locale :as locale]
+   [teleward.state.api :as state]
+   [teleward.telegram :as tg]
    [teleward.time :refer [unix-now]]
-   [clojure.tools.logging :as log]))
+   [teleward.util :refer [with-safe-log]]))
 
 
 (defn looks-solution?
@@ -193,17 +193,23 @@
 (defn process-pending-users
   "
   Cleanup: ban users who haven't solved the captcha in time.
-  The `date` attr tracks the date the user did join.
+  The `date-joined` attr tracks the date the user did join.
   Delete the captcha message, ban the user, drop the attributes.
   "
   [config state]
 
   (let [{:keys [telegram]
          {:keys [user-trail-period]} :polling}
-        config]
+        config
+
+        unix-expired
+        (- (unix-now) user-trail-period)
+
+        triples
+        (state/filter-by-attr state :date-joined :< unix-expired)]
 
     (doseq [[chat-id user-id attrs]
-            (state/iter-attrs state)]
+            triples]
 
       (let [{:keys [username
                     date-joined
@@ -211,21 +217,18 @@
                     captcha-message-id]}
             attrs]
 
-        (when (and date-joined
-                   (> (- (unix-now) date-joined) user-trail-period))
-
-          (when captcha-message-id
-            (with-safe-log
-              (tg/delete-message telegram chat-id captcha-message-id)))
-
+        (when captcha-message-id
           (with-safe-log
-            (tg/ban-user telegram chat-id user-id {:revoke-messages true}))
+            (tg/delete-message telegram chat-id captcha-message-id)))
 
-          (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, username: %s, date joined: %s"
-                     chat-id user-id username date-joined)
+        (with-safe-log
+          (tg/ban-user telegram chat-id user-id {:revoke-messages true}))
 
-          (when joined-message-id
-            (with-safe-log
-              (tg/delete-message telegram chat-id joined-message-id)))
+        (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, username: %s, date joined: %s"
+                   chat-id user-id username date-joined)
 
-          (state/del-attrs state chat-id user-id))))))
+        (when joined-message-id
+          (with-safe-log
+            (tg/delete-message telegram chat-id joined-message-id)))
+
+        (state/del-attrs state chat-id user-id)))))

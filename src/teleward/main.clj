@@ -4,13 +4,13 @@
   "
   (:gen-class)
   (:require
-   [teleward.version :as version]
+   [clojure.tools.cli :refer [parse-opts]]
+   [clojure.tools.logging :as log]
+   [teleward.config :as config]
    [teleward.logging :as logging]
    [teleward.poll :as poll]
-   [teleward.webhook :as webhook]
-   [teleward.config :as config]
-   [clojure.tools.logging :as log]
-   [clojure.tools.cli :refer [parse-opts]]))
+   [teleward.version :as version]
+   [teleward.webhook :as webhook]))
 
 
 (defn handle-errors [errors]

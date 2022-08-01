@@ -1,11 +1,11 @@
 (ns teleward.poll
   (:require
-   [teleward.telegram :as tg]
    [cheshire.core :as json]
-   [teleward.state :as state]
-   [teleward.util :refer [with-safe-log]]
+   [clojure.tools.logging :as log]
    [teleward.processing :as processing]
-   [clojure.tools.logging :as log]))
+   [teleward.state.atom :as state]
+   [teleward.telegram :as tg]
+   [teleward.util :refer [with-safe-log]]))
 
 
 (defn save-offset [offset-file offset]

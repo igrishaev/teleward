@@ -7,12 +7,12 @@
   See https://stackoverflow.com/questions/16910955/
   "
   (:import
-   org.slf4j.LoggerFactory
    ch.qos.logback.classic.Level
    ch.qos.logback.classic.Logger
    ch.qos.logback.classic.encoder.PatternLayoutEncoder
    ch.qos.logback.core.ConsoleAppender
-   ch.qos.logback.core.FileAppender))
+   ch.qos.logback.core.FileAppender
+   org.slf4j.LoggerFactory))
 
 
 (defn kw->level ^Level [kw]
