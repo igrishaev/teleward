@@ -64,3 +64,6 @@ docker-run:
 
 lint:
 	clj-kondo --lint src
+
+yc-jar:
+	lein with-profile +yc-function uberjar

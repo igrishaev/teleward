@@ -1,14 +1,14 @@
 (ns teleward.yc-function.handler
   (:require
-   [clojure.java.io :as io]
-   [cheshire.core :as json])
+   [cheshire.core :as json]
+   [clojure.java.io :as io])
   (:import
    javax.servlet.http.HttpServletRequest
    javax.servlet.http.HttpServletResponse)
   (:gen-class
-   :name teleward.YCHandler
    :extends javax.servlet.http.HttpServlet
-   :main false))
+   :main false
+   :name teleward.YCHandler))
 
 
 (defn -doPost
