@@ -118,4 +118,5 @@
 
 (defn validate-config! [config]
   (when-not (get-in config [:telegram :token])
-    (throw (ex-info "Telegram token not set" {:exit/code 1}))))
+    (throw (ex-info "Telegram token not set" {:exit/code 1})))
+  config)

@@ -8,7 +8,7 @@
    [teleward.state.api :as api]))
 
 
-(defn belongs? [val collection]
+(defn in? [val collection]
   (contains? (set collection) val))
 
 
@@ -46,7 +46,7 @@
             (= :=) =
             (<= :<=) <=
             (>= :>=) >=
-            (in :in) belongs?
+            (in :in) in?
             ;; else
             (throw (new Exception (format "Wrong op: %s" op))))]
 

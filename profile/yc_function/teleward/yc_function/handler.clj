@@ -1,7 +1,15 @@
 (ns teleward.yc-function.handler
   (:require
    [cheshire.core :as json]
-   [clojure.java.io :as io])
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [clojure.tools.logging :as log]
+   [medley.core :refer [deep-merge]]
+   [teleward.config :as config]
+   [teleward.logging :as logging]
+   [teleward.processing :as processing]
+   [teleward.state.atom :as state]
+   [teleward.telegram :as tg])
   (:import
    javax.servlet.http.HttpServletRequest
    javax.servlet.http.HttpServletResponse)
@@ -11,33 +19,70 @@
    :name teleward.YCHandler))
 
 
+(defn json-request?
+  [^HttpServletRequest request]
+  (some-> request
+          .getContentType
+          str/lower-case
+          (str/includes? "application/json")))
+
+
+(def config-overrides
+  {:logging {:file nil}})
+
+
+(def INIT
+  (delay
+    (let [config
+          (-> nil
+              config/make-config
+              config/validate-config!
+              (deep-merge config-overrides))
+
+          {:keys [logging
+                  telegram]}
+          config
+
+          me
+          (tg/get-me telegram)
+
+          state
+          (state/make-state)]
+
+      (logging/init-logging logging)
+
+      {:me me
+       :state state
+       :config config})))
+
+
 (defn -doPost
-  [this
+  [_this
    ^HttpServletRequest request
    ^HttpServletResponse response]
 
-  (let [content-type
-        (.getContentType request)
+  (log/infof "Incoming POST request, path: %s, type: %s, len: %s"
+             (.getContextPath request)
+             (.getContentType request)
+             (.getContentLength request))
 
-        content-length
-        (or (.getContentLength request) 0)
-
-        uri
-        (.getRequestURI request)
-
-        in-stream
-        (.getInputStream request)
-
-        out-stream
-        (.getOutputStream response)
+  (let [{:keys [state me config]}
+        @INIT
 
         data
-        (-> in-stream io/reader json/parse-stream)]
+        (when (json-request? request)
+          (-> request
+              .getInputStream
+              io/reader
+              json/parse-stream))]
 
-    (.setContentType response "application/json")
+    (log/debugf "Payload: %s" (json/generate-string data {:pretty true}))
 
-    (.print out-stream
-            (json/generate-string {:echo data} {:pretty true}))))
+    (when data
+      (processing/process-update config state data me))
+
+    (.setContentType response "text/plain")
+    (-> response .getOutputStream (.print "OK"))))
 
 
 #_(
