@@ -67,3 +67,6 @@ lint:
 
 yc-jar:
 	lein with-profile +yc-function uberjar
+
+yc-repl:
+	lein with-profile +yc-function repl
