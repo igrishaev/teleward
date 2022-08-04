@@ -27,6 +27,14 @@
           (str/includes? "application/json")))
 
 
+(defn parse-json
+  [^HttpServletRequest request]
+  (-> request
+      .getInputStream
+      io/reader
+      json/parse-stream))
+
+
 (def config-overrides
   {:logging {:file nil}})
 
@@ -56,33 +64,50 @@
        :config config})))
 
 
-(defn -doPost
+(defn -service
   [_this
    ^HttpServletRequest request
    ^HttpServletResponse response]
 
-  (log/infof "Incoming POST request, path: %s, type: %s, len: %s"
-             (.getContextPath request)
-             (.getContentType request)
-             (.getContentLength request))
+  (let [method
+        (.getMethod request)
 
-  (let [{:keys [state me config]}
+        uri
+        (.getContextPath request)
+
+        content-type
+        (.getContentType request)
+
+        content-length
+        (.getContentLength request)
+
+        _
+        (log/infof "Incoming HTTP request, method: %s, path: %s, type: %s, len: %s"
+                   method uri content-type content-length)
+
+        {:keys [state me config]}
         @INIT
 
-        data
-        (when (json-request? request)
-          (-> request
-              .getInputStream
-              io/reader
-              json/parse-stream))]
+        webhook-path
+        (-> config :webhook :path)]
 
-    (log/debugf "Payload: %s" (json/generate-string data {:pretty true}))
+    (if (and (= method "POST")
+             (= uri webhook-path)
+             (json-request? request))
 
-    (when data
-      (processing/process-update config state data me))
+      (let [data (parse-json request)]
+        (log/debugf "Payload: %s" (json/generate-string data {:pretty true}))
 
-    (.setContentType response "text/plain")
-    (-> response .getOutputStream (.print "OK"))))
+        (try
+          (processing/process-update config state data)
+          (processing/process-pending-users config state)
+          (.setStatus response 200)
+
+          (catch Throwable e
+            (log/errorf e "Unhandled exception")
+            (.sendError response 500 "Server Error"))))
+
+      (.sendError response 404 "Not found"))))
 
 
 #_(
