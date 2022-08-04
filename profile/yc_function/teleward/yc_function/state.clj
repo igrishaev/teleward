@@ -99,12 +99,17 @@
                 [chat_id user_id (cleanup-pk row)])))))
 
 
+(defn get-env [env-name]
+  (or (System/getenv env-name)
+      (throw (new Exception (format "The '%s' environment variable not set!" env-name)))))
+
+
 (defn make-state [& [options]]
   (map->DynamoDBState
-   {:access-key (System/getenv "AWS_ACCESS_KEY_ID")
-    :secret-key (System/getenv "AWS_SECRET_ACCESS_KEY")
-    :endpoint (System/getenv "DYNAMODB_ENDPOINT")
-    :table (System/getenv "DYNAMODB_TABLE")}))
+   {:access-key (get-env "AWS_ACCESS_KEY_ID")
+    :secret-key (get-env "AWS_SECRET_ACCESS_KEY")
+    :endpoint (get-env "DYNAMODB_ENDPOINT")
+    :table (get-env "DYNAMODB_TABLE")}))
 
 
 #_
