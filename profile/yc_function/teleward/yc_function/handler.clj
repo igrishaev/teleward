@@ -8,7 +8,7 @@
    [teleward.config :as config]
    [teleward.logging :as logging]
    [teleward.processing :as processing]
-   [teleward.state.atom :as state]
+   [teleward.yc-function.state :as state]
    [teleward.telegram :as tg])
   (:import
    javax.servlet.http.HttpServletRequest
