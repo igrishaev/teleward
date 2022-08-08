@@ -21,3 +21,4 @@ package-lock.json
 package.json
 builds/teleward-*
 secrets.env
+PLATFORM

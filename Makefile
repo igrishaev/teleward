@@ -1,15 +1,15 @@
 
-NE_TAG = ghcr.io/graalvm/native-image:22.2.0
+NI_TAG = ghcr.io/graalvm/native-image:22.2.0
 
 TAG = teleward:latest
 
 VERSION_FILE = resources/VERSION
 
-BINARY_FILE = teleward-$(shell uname -s)-$(shell uname -m)
-
 PWD = $(shell pwd)
 
-NE_ARGS = \
+PLATFORM = PLATFORM
+
+NI_ARGS = \
 	--report-unsupported-elements-at-runtime \
 	--initialize-at-build-time \
 	--no-fallback \
@@ -19,11 +19,10 @@ NE_ARGS = \
 	--enable-url-protocols=http,https \
 	-H:ReflectionConfigurationFiles=reflection-config.json \
 	-H:+ReportExceptionStackTraces \
-	-H:Log=registerResource \
-	-H:Name=./builds/${BINARY_FILE}
+	-H:Log=registerResource
 
-ne-args:
-	echo ${NE_ARGS}
+ni-args:
+	echo ${NI_ARGS}
 
 build-binary-local: cleanup uberjar graal-build
 
@@ -36,11 +35,17 @@ version:
 uberjar: version
 	lein uberjar
 
-graal-build:
-	native-image ${NE_ARGS}
+graal-build: platform-local
+	native-image ${NI_ARGS} -H:Name=./builds/teleward-$(shell cat ${PLATFORM})
 
-build-binary-docker: uberjar
-	docker run -it --rm -v ${PWD}:/build -w /build ${NE_TAG} ${NE_ARGS}
+platform-local:
+	echo `uname -s`-`uname -m` > ${PLATFORM}
+
+platform-docker:
+	docker run -it --rm --entrypoint /bin/sh ${NI_TAG} -c 'echo `uname -s`-`uname -m`' > ${PLATFORM}
+
+build-binary-docker: uberjar platform-docker
+	docker run -it --rm -v ${PWD}:/build -w /build ${NI_TAG} ${NI_ARGS} -H:Name=./builds/teleward-$(shell cat ${PLATFORM})
 
 toc-install:
 	npm install --save markdown-toc
