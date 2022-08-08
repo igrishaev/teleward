@@ -38,7 +38,7 @@
 
   :main ^:skip-aot teleward.main
 
-  :target-path "target/%s"
+  :target-path "target/uberjar"
 
   :uberjar-name "teleward.jar"
 
