@@ -19,7 +19,8 @@ NI_ARGS = \
 	--enable-url-protocols=http,https \
 	-H:ReflectionConfigurationFiles=reflection-config.json \
 	-H:+ReportExceptionStackTraces \
-	-H:Log=registerResource
+	-H:Log=registerResource \
+	-H:Name=./builds/teleward-
 
 ni-args:
 	echo ${NI_ARGS}
@@ -36,7 +37,7 @@ uberjar: version
 	lein uberjar
 
 graal-build: platform-local
-	native-image ${NI_ARGS} -H:Name=./builds/teleward-$(shell cat ${PLATFORM})
+	native-image ${NI_ARGS}$(shell cat ${PLATFORM})
 
 platform-local:
 	echo `uname -s`-`uname -m` > ${PLATFORM}
@@ -45,7 +46,7 @@ platform-docker:
 	docker run -it --rm --entrypoint /bin/sh ${NI_TAG} -c 'echo `uname -s`-`uname -m`' > ${PLATFORM}
 
 build-binary-docker: uberjar platform-docker
-	docker run -it --rm -v ${PWD}:/build -w /build ${NI_TAG} ${NI_ARGS} -H:Name=./builds/teleward-$(shell cat ${PLATFORM})
+	docker run -it --rm -v ${PWD}:/build -w /build ${NI_TAG} ${NI_ARGS}$(shell cat ${PLATFORM})
 
 toc-install:
 	npm install --save markdown-toc
