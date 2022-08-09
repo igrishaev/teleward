@@ -64,7 +64,7 @@
        :config config})))
 
 
-(defn -service
+(defn -doPost
   [_this
    ^HttpServletRequest request
    ^HttpServletResponse response]
@@ -86,14 +86,9 @@
                    method uri content-type content-length)
 
         {:keys [state me config]}
-        @INIT
+        @INIT]
 
-        webhook-path
-        (-> config :webhook :path)]
-
-    (if (and (= method "POST")
-             (= uri webhook-path)
-             (json-request? request))
+    (if (json-request? request)
 
       (let [data (parse-json request)]
         (log/debugf "Payload: %s" (json/generate-string data {:pretty true}))
@@ -107,7 +102,7 @@
             (log/errorf e "Unhandled exception")
             (.sendError response 500 "Server Error"))))
 
-      (.sendError response 404 "Not found"))))
+      (.sendError response 400 "Non-JSON request"))))
 
 
 #_(
