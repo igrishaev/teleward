@@ -48,6 +48,11 @@
     {*warn-on-reflection* true
      *assert* true}}
 
+   :yc-function
+   {:dependencies [[com.taoensso/faraday "1.11.4"]
+                   [javax.servlet/javax.servlet-api "4.0.1"]]
+    :source-paths ["profile/yc_function"]}
+
    :uberjar
    {:aot :all
     :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})

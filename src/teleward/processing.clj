@@ -82,7 +82,8 @@
                          {:locked? true
                           :date-joined date
                           :joined-message-id message_id
-                          :username user-name})
+                          :username user-name
+                          :attempt 0})
 
         (log/infof "Locking a new member, chat-id: %s, user-id: %s, username: %s, date: %s"
                    chat-id member-id member-username date)

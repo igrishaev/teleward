@@ -107,7 +107,9 @@
 
 (defn from-env []
   {:telegram
-   {:token (System/getenv "TELEGRAM_TOKEN")}})
+   {:token (System/getenv "TELEGRAM_TOKEN")}
+   :logging
+   {:level (System/getenv "LOGGING_LEVEL")}})
 
 
 (defn make-config [& [cli-options]]
@@ -118,4 +120,5 @@
 
 (defn validate-config! [config]
   (when-not (get-in config [:telegram :token])
-    (throw (ex-info "Telegram token not set" {:exit/code 1}))))
+    (throw (ex-info "Telegram token not set" {:exit/code 1})))
+  config)
