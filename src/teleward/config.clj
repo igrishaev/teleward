@@ -107,7 +107,9 @@
 
 (defn from-env []
   {:telegram
-   {:token (System/getenv "TELEGRAM_TOKEN")}})
+   {:token (System/getenv "TELEGRAM_TOKEN")}
+   :logging
+   {:level (System/getenv "LOGGING_LEVEL")}})
 
 
 (defn make-config [& [cli-options]]

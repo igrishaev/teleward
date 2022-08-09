@@ -17,9 +17,9 @@
 
 (defn kw->level ^Level [kw]
   (case kw
-    :debug Level/DEBUG
-    :info Level/INFO
-    :error Level/ERROR
+    (:debug "debug") Level/DEBUG
+    (:info "info") Level/INFO
+    (:error "error") Level/ERROR
     (throw (ex-info (format "Wrong logging level: %s" kw)
                     {:level kw}))))
 
