@@ -267,6 +267,8 @@ primary key (both integers).
 Zip and upload this jar into S3/YC bucket. Create a lambda/function with these
 settings:
 
+| Setting | Value |
+| ------- | ----- |
 | environment | Java 11                |
 | bucket      | the name of the bucket |
 | object      | path to the zip file   |
@@ -277,6 +279,8 @@ settings:
 
 Setup the env vars:
 
+| Variable | Value |
+| -------- | ----- |
 | TELEGRAM_TOKEN        | your telegram token       |
 | LOGGING_LEVEL         | debug/info/error          |
 | DYNAMODB_TABLE        | table to store the state  |
