@@ -32,7 +32,7 @@
   (-> request
       .getInputStream
       io/reader
-      json/parse-stream))
+      (json/parse-stream keyword)))
 
 
 (def config-overrides
@@ -90,11 +90,11 @@
 
     (if (json-request? request)
 
-      (let [data (parse-json request)]
-        (log/debugf "Payload: %s" (json/generate-string data {:pretty true}))
+      (let [update-entry (parse-json request)]
+        (log/debugf "Payload: %s" update-entry)
 
         (try
-          (processing/process-update config state data)
+          (processing/process-update config state update-entry me)
           (processing/process-pending-users config state)
           (.setStatus response 200)
 
