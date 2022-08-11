@@ -17,6 +17,7 @@ image. Runs on bare Linux/MacOS with no requirements. Fast and robust.
 - [Configuration](#configuration)
 - [Deploying on bare Ubuntu](#deploying-on-bare-ubuntu)
 - [Webhook mode](#webhook-mode)
+- [AWS/Yandex Cloud deployment](#awsyandex-cloud-deployment)
 - [Health check](#health-check)
 - [Further work](#further-work)
 
@@ -251,6 +252,52 @@ ExecStart=caddy reverse-proxy --from <DOMAIN> --to localhost:8090
 ```
 
 See the `/conf` directory for configuration.
+
+## AWS/Yandex Cloud deployment
+
+Compile uberjar with with a special profile:
+
+```bash
+make yc-jar
+```
+
+In Dynamo DB or Yandex Db, create a table with `(chat_id, user_id)` pair for the
+primary key (both integers).
+
+Zip and upload this jar into S3/YC bucket. Create a lambda/function with these
+settings:
+
++-----+-----+
+| environment | Java 11  |
++-----+-----+
+| bucket | the name of the bucket  |
++-----+-----+
+| object | path to the zip file  |
++-----+-----+
+| entrypoint | `teleward.YCHandler`  |
++-----+-----+
+| timeout | minimum 5 seconds  |
++-----+-----+
+| memory | 128 is enough  |
++-----+-----+
+
+Setup the env vars:
+
++-----+-----+
+| TELEGRAM_TOKEN | your telegram token |
++-----+-----+
+| LOGGING_LEVEL | debug/info/error  |
++-----+-----+
+| DYNAMODB_TABLE | table to store the state  |
++-----+-----+
+| AWS_ACCESS_KEY_ID | aws public key  |
++-----+-----+
+| AWS_SECRET_ACCESS_KEY | aws secret key  |
++-----+-----+
+| DYNAMODB_ENDPOINT | HTTPS URL to DynamoDB/YDB |
++-----+-----+
+
+Make you lambda/function public. Use its URL as a webhook for your bot.
 
 ## Health check
 
