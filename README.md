@@ -267,35 +267,23 @@ primary key (both integers).
 Zip and upload this jar into S3/YC bucket. Create a lambda/function with these
 settings:
 
-+-----+-----+
-| environment | Java 11  |
-+-----+-----+
-| bucket | the name of the bucket  |
-+-----+-----+
-| object | path to the zip file  |
-+-----+-----+
-| entrypoint | `teleward.YCHandler`  |
-+-----+-----+
-| timeout | minimum 5 seconds  |
-+-----+-----+
-| memory | 128 is enough  |
-+-----+-----+
+| environment | Java 11                |
+| bucket      | the name of the bucket |
+| object      | path to the zip file   |
+| entrypoint  | `teleward.YCHandler`   |
+| timeout     | minimum 5 seconds      |
+| memory      | 128 is enough          |
+
 
 Setup the env vars:
 
-+-----+-----+
-| TELEGRAM_TOKEN | your telegram token |
-+-----+-----+
-| LOGGING_LEVEL | debug/info/error  |
-+-----+-----+
-| DYNAMODB_TABLE | table to store the state  |
-+-----+-----+
-| AWS_ACCESS_KEY_ID | aws public key  |
-+-----+-----+
-| AWS_SECRET_ACCESS_KEY | aws secret key  |
-+-----+-----+
-| DYNAMODB_ENDPOINT | HTTPS URL to DynamoDB/YDB |
-+-----+-----+
+| TELEGRAM_TOKEN        | your telegram token       |
+| LOGGING_LEVEL         | debug/info/error          |
+| DYNAMODB_TABLE        | table to store the state  |
+| AWS_ACCESS_KEY_ID     | aws public key            |
+| AWS_SECRET_ACCESS_KEY | aws secret key            |
+| DYNAMODB_ENDPOINT     | HTTPS URL to DynamoDB/YDB |
+
 
 Make you lambda/function public. Use its URL as a webhook for your bot.
 
