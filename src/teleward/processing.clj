@@ -3,9 +3,9 @@
    [clojure.string :as str]
    [clojure.tools.logging :as log]
    [teleward.captcha :as captcha]
-   [teleward.locale :as locale]
    [teleward.state.api :as state]
    [teleward.telegram :as tg]
+   [teleward.template :as template]
    [teleward.time :refer [unix-now]]
    [teleward.util :refer [with-safe-log]]))
 
@@ -73,7 +73,16 @@
       ;; for each new member...
       (doseq [member new_chat_members
               :let [{member-id :id
-                     member-username :username} member]
+                     member-username :username
+                     member-first-name :first_name
+                     member-last-name :last_name} member
+
+                    ;; compose the full name
+                    member-full-name
+                    (str member-first-name
+                         (when member-last-name
+                           (str " " member-last-name)))]
+
               ;; except our bot
               :when (not= my-id member-id)]
 
@@ -92,13 +101,24 @@
         (let [[captcha-text captcha-solution]
               (captcha/make-captcha captcha-style)
 
-              captcha-message
-              (locale/get-captcha-message lang member-username captcha-text)
+              template-context
+              {:user [:text_mention member-full-name {:user member}]
+               :captcha [:code captcha-text]}
+
+              template
+              (template/get-captcha-template lang)
+
+              {entities :entities
+               captcha-message :message}
+              (template/render template template-context)
 
               ;; track the id of the captcha message
               {captcha-message-id :message_id}
               (with-safe-log
-                (tg/send-message telegram chat-id captcha-message))]
+                (tg/send-message telegram
+                                 chat-id
+                                 captcha-message
+                                 {:entities entities}))]
 
           (log/infof "Captcha sent, chat-id: %s, user-id: %s, username: %s, text: %s, solution: %s, message-id: %s"
                      chat-id member-id member-username captcha-text captcha-solution captcha-message-id)
