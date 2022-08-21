@@ -132,7 +132,7 @@
               (captcha/make-captcha captcha-style)
 
               template-context
-              {:user [:text_mention member-full-name {:user member}]
+              {:user (template/user-mention member)
                :captcha [:code captcha-text]}
 
               template

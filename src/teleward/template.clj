@@ -9,7 +9,7 @@
    :captcha
    \newline
    \newline
-   "До тех пор сообщения будут удаляться, и скоро вас исключат. Спасибо!"])
+   "До тех пор сообщения будут удаляться, и скоро вас исключат."])
 
 
 (def captcha-en
@@ -22,7 +22,20 @@
    :captcha
    \newline
    \newline
-   "Until then, your messages will be deleted, and you will be kicked soon. Thank you!"])
+   "Until then, your messages will be deleted, and you will be kicked soon."])
+
+
+(defn user-mention [user]
+  (let [{:keys [first_name
+                last_name]}
+        user
+
+        full-name
+        (str first_name
+             (when last_name
+               (str " " last_name)))]
+
+    [:text_mention full-name {:user user}]))
 
 
 (defn get-captcha-template [locale]
