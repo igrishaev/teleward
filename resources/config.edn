@@ -1,0 +1,35 @@
+
+{:telegram
+ {:token nil
+  :user-agent "Clojure"
+  :timeout 65000
+  :keepalive 65000}
+
+ :language :ru
+
+ :mode :polling
+
+ :logging
+ {:level :info
+  :pattern "%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"
+  :console true
+  :file "logs/teleward.log"}
+
+ :captcha
+ {:style :lisp}
+
+ :processing
+ {:ban-mode :ban}
+
+ :polling
+ {:offset-file "TELEGRAM_OFFSET"
+  :udpate-timeout 60
+  :message-expires 120
+  :user-trail-period 60
+  :user-trail-attempts 3
+  :solution-threshold 5}
+
+ :webhook
+ {:path "/telegram/webhook"
+  :server {:host "localhost"
+           :port 8090}}}

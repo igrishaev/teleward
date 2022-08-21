@@ -157,7 +157,7 @@ we name the most important parameters you will need.
   `getUpdates` call. Default is `TELEGRAM_OFFSET` in the current working
   directory.
 
-- `--lang`: the language for messages. Can be `en, ru`, default is `ru`.
+- `--language`: the language for messages. Can be `en, ru`, default is `ru`.
 
 - `--captcha.style`: a type of captcha. When `lisp`, the captcha looks like `(+
   4 3)`. Any other value type will produce `4 + 3`. The operator is taken
@@ -167,11 +167,33 @@ Example:
 
 ```bash
 ./target/teleward -t <...> -l debug \
-  --lang=en --telegram.offset-file=mybot.offset \
+  --language=en --telegram.offset-file=mybot.offset \
   --captcha.style=normal
 ```
 
 For the rest of the config, see the `src/teleward/config.clj` file.
+
+[cprop]: https://github.com/tolitius/cprop
+
+Under the hood, Teleward uses [Cprop][cprop] for configuration. This library
+takes into account env vars to override default values. Set the `DEBUG=y`
+variable to see the log of configuration startup.
+
+## Env vars
+
+```
+TELEGRAM__TOKEN
+LANGUAGE
+LOGGING__LEVEL
+POLLING__UDPATE_TIMEOUT
+POLLING__USER_TRAIL_PERIOD
+POLLING__USER_TRAIL_ATTEMPTS
+POLLING__MESSAGE_EXPIRES
+WEBHOOK__PATH
+WEBHOOK__SERVER__HOST
+WEBHOOK__SERVER__PORT
+PROCESSING__BAN_MODE
+```
 
 ## Deploying on bare Ubuntu
 
@@ -211,7 +233,7 @@ RestartSec = 1
 User = ivan
 WorkingDirectory = /home/ivan/teleward/
 ExecStart = /home/ivan/teleward/teleward-Linux-x86_64 -l debug
-Environment = TELEGRAM_TOKEN=xxxxxxxxxxxxxx
+Environment = TELEGRAM__TOKEN=xxxxxxxxxxxxxx
 
 [Install]
 WantedBy = multi-user.target
@@ -281,13 +303,12 @@ Setup the env vars:
 
 | Variable | Value |
 | -------- | ----- |
-| TELEGRAM_TOKEN        | your telegram token       |
-| LOGGING_LEVEL         | debug/info/error          |
-| DYNAMODB_TABLE        | table to store the state  |
-| AWS_ACCESS_KEY_ID     | aws public key            |
-| AWS_SECRET_ACCESS_KEY | aws secret key            |
-| DYNAMODB_ENDPOINT     | HTTPS URL to DynamoDB/YDB |
-
+| `TELEGRAM__TOKEN`       | your telegram token       |
+| `LOGGING__LEVEL`        | debug/info/error          |
+| `DYNAMODB_TABLE`        | table to store the state  |
+| `AWS_ACCESS_KEY_ID`     | aws public key            |
+| `AWS_SECRET_ACCESS_KEY` | aws secret key            |
+| `DYNAMODB_ENDPOINT`     | HTTPS URL to DynamoDB/YDB |
 
 Make you lambda/function public. Use its URL as a webhook for your bot.
 

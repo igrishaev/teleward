@@ -16,6 +16,7 @@ NI_ARGS = \
 	--allow-incomplete-classpath \
 	-jar ./target/uberjar/teleward.jar \
 	-H:IncludeResources='^VERSION$$' \
+	-H:IncludeResources='^config.edn$$' \
 	--enable-url-protocols=http,https \
 	-H:ReflectionConfigurationFiles=reflection-config.json \
 	-H:+ReportExceptionStackTraces \

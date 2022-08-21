@@ -27,7 +27,7 @@
 
 (def HELP "
 Teleward bot. Usage:
-$> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
+$> teleward -t <telegram-token> -l error --language ru --captcha.style lisp
 ")
 
 (defn handle-help [summary]
@@ -36,8 +36,11 @@ $> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
 
 
 (defn start-work [cli-options]
-  (let [config
-        (config/make-config cli-options)
+  (let [overrides
+        (config/cli-options->config cli-options)
+
+        config
+        (config/make-config overrides)
 
         {:keys [mode]}
         cli-options]
@@ -64,8 +67,11 @@ $> teleward -t <telegram-token> -l error --lang ru --captcha.style lisp
   "
   [args]
 
-  (let [opts-parsed
-        (parse-opts args config/cli-opts)
+  (let [cli-spec
+        (config/make-cli-opts)
+
+        opts-parsed
+        (parse-opts args cli-spec)
 
         {:keys [options _arguments errors summary]}
         opts-parsed

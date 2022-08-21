@@ -4,7 +4,6 @@
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
-   [medley.core :refer [deep-merge]]
    [teleward.config :as config]
    [teleward.logging :as logging]
    [teleward.processing :as processing]
@@ -39,13 +38,12 @@
   {:logging {:file nil}})
 
 
-(def INIT
+(def CONTEXT
   (delay
     (let [config
-          (-> nil
+          (-> config-overrides
               config/make-config
-              config/validate-config!
-              (deep-merge config-overrides))
+              config/validate-config!)
 
           {:keys [logging
                   telegram]}

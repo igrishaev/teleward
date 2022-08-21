@@ -30,9 +30,9 @@
   :dependencies
   [[org.clojure/clojure "1.11.1"]
    [http-kit "2.6.0"]
+   [cprop "0.1.19"]
    [cheshire "5.10.0"]
    [org.clojure/tools.cli "1.0.206"]
-   [medley "1.4.0"]
    [org.clojure/tools.logging "1.2.4"]
    [ch.qos.logback/logback-classic "1.2.11"]]
 

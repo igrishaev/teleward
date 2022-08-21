@@ -39,7 +39,7 @@
    update-entry]
 
   (let [;; destruct the config vars in advance
-        {:keys [lang]
+        {:keys [language]
          {:keys [user-trail-attempts
                  message-expires
                  solution-threshold]} :polling
@@ -95,7 +95,7 @@
                          {:locked? true
                           :date-joined date
                           :joined-message-id message_id
-                          :username user-name
+                          :username (or member-username member-full-name)
                           :attempt 0})
 
         (log/infof "Locking a new member, chat-id: %s, user-id: %s, username: %s, date: %s"
@@ -110,7 +110,7 @@
                :captcha [:code captcha-text]}
 
               template
-              (template/get-captcha-template lang)
+              (template/get-captcha-template language)
 
               {entities :entities
                captcha-message :message}
@@ -226,7 +226,10 @@
            state
            config]}]
 
-  (let [{{:keys [user-trail-period]} :polling}
+  (let [ban-mode
+        (-> config :processing :ban-mode)
+
+        {{:keys [user-trail-period]} :polling}
         config
 
         unix-expired
@@ -248,11 +251,21 @@
           (with-safe-log
             (tg/delete-message telegram chat-id captcha-message-id)))
 
-        (with-safe-log
-          (tg/ban-user telegram chat-id user-id {:revoke-messages true}))
+        (case ban-mode
+          :ban
+          (with-safe-log
+            (tg/ban-user telegram chat-id user-id {:revoke-messages true})
+            (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, username: %s, date joined: %s"
+                       chat-id user-id username date-joined))
 
-        (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, username: %s, date joined: %s"
-                   chat-id user-id username date-joined)
+          :restrict
+          (with-safe-log
+            (tg/restrict-user telegram chat-id user-id tg/chat-permissions-off)
+            (log/infof "User restricted (captcha timeout), chat-id: %s, user-id: %s, username: %s, date joined: %s"
+                       chat-id user-id username date-joined))
+
+          :else
+          (log/warn "Ban mode is not set!"))
 
         (when joined-message-id
           (with-safe-log
