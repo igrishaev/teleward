@@ -31,11 +31,15 @@
 
 
 (defn process-update
-  [config state update-entry me]
+  [{:as _context
+    :keys [config
+           telegram
+           state
+           me]}
+   update-entry]
 
   (let [;; destruct the config vars in advance
-        {:keys [lang
-                telegram]
+        {:keys [lang]
          {:keys [user-trail-attempts
                  message-expires
                  solution-threshold]} :polling
@@ -206,9 +210,9 @@
 
 
 (defn process-updates
-  [config state updates me]
+  [context updates]
   (doseq [update-entry updates]
-    (process-update config state update-entry me)))
+    (process-update context update-entry)))
 
 
 (defn process-pending-users
@@ -217,10 +221,12 @@
   The `date-joined` attr tracks the date the user did join.
   Delete the captcha message, ban the user, drop the attributes.
   "
-  [config state]
+  [{:as _context
+    :keys [telegram
+           state
+           config]}]
 
-  (let [{:keys [telegram]
-         {:keys [user-trail-period]} :polling}
+  (let [{{:keys [user-trail-period]} :polling}
         config
 
         unix-expired

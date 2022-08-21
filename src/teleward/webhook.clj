@@ -12,7 +12,7 @@
    java.util.TimerTask))
 
 
-(defn handle-request [request config state me]
+(defn handle-request [context request]
 
   (let [update-entry
         (some-> request
@@ -25,12 +25,13 @@
                   (json/generate-string update-entry {:pretty true})))
 
     (when update-entry
-      (processing/process-update config state update-entry me)))
+      (processing/process-update context update-entry)))
 
   {:status 200 :body "OK"})
 
 
-(defn run-cron-task [config state]
+(defn run-cron-task
+  [{:as _context :keys [config state]}]
 
   (let [timer
         (new Timer "teleward" false)
@@ -55,7 +56,7 @@
     result))
 
 
-(defn run-server [config state me]
+(defn run-server [{:as context :keys [config]}]
 
   (let [server-config
         (-> config :webhook :server)
@@ -82,7 +83,7 @@
 
               (and (= :post request-method)
                    (= webhook-path uri))
-              (handle-request request config state me)
+              (handle-request context request)
 
               :else
               {:status 404 :body "not found"})))
@@ -104,7 +105,13 @@
         (tg/get-me telegram)
 
         state
-        (state/make-state)]
+        (state/make-state)
 
-    (run-cron-task config state)
-    (run-server config state me)))
+        context
+        {:me me
+         :state state
+         :telegram telegram
+         :config config}]
+
+    (run-cron-task context)
+    (run-server context)))

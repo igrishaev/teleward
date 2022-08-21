@@ -33,6 +33,12 @@
         state
         (state/make-state)
 
+        context
+        {:me me
+         :state state
+         :telegram telegram
+         :config config}
+
         offset
         (load-offset offset-file)]
 
@@ -56,8 +62,8 @@
         (when offset
           (save-offset offset-file new-offset))
 
-        (processing/process-updates config state updates me)
-        (processing/process-pending-users config state)
+        (processing/process-updates context updates)
+        (processing/process-pending-users context)
 
         (recur new-offset)))))
 
@@ -73,6 +79,6 @@
 
  (def -config {:telegram -telegram})
 
- (run-poll -config)
+ (run-polling -config)
 
  )

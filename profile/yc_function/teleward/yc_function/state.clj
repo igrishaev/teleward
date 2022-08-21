@@ -104,7 +104,7 @@
       (throw (new Exception (format "The '%s' environment variable not set!" env-name)))))
 
 
-(defn make-state [& [options]]
+(defn make-state [& [_options]]
   (map->DynamoDBState
    {:access-key (get-env "AWS_ACCESS_KEY_ID")
     :secret-key (get-env "AWS_SECRET_ACCESS_KEY")

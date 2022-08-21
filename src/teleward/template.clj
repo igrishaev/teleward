@@ -33,7 +33,7 @@
 
 (defn render [template & [context]]
   (reduce
-   (fn [{:as result :keys [message entities]} item]
+   (fn [{:as result :keys [message]} item]
      (cond
 
        (or (string? item) (char? item))

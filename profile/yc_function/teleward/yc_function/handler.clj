@@ -55,11 +55,15 @@
           (tg/get-me telegram)
 
           state
-          (state/make-state)]
+          (state/make-state)
+
+          {:keys [telegram]}
+          config]
 
       (logging/init-logging logging)
 
       {:me me
+       :telegram telegram
        :state state
        :config config})))
 
@@ -85,8 +89,8 @@
         (log/infof "Incoming HTTP request, method: %s, path: %s, type: %s, len: %s"
                    method uri content-type content-length)
 
-        {:keys [state me config]}
-        @INIT]
+        context
+        @CONTEXT]
 
     (if (json-request? request)
 
@@ -94,8 +98,8 @@
         (log/debugf "Payload: %s" update-entry)
 
         (try
-          (processing/process-update config state update-entry me)
-          (processing/process-pending-users config state)
+          (processing/process-update context update-entry)
+          (processing/process-pending-users context)
           (.setStatus response 200)
 
           (catch Throwable e
