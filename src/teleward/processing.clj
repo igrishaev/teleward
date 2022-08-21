@@ -213,8 +213,7 @@
                 (state/del-attrs state chat-id user-id))
 
               ;; otherwise, increase the number of attempts. When the attempts
-              ;; are over, delete the captcha message and terminate a user. Keep the
-              ;; attributes for the next stage.
+              ;; are over, delete the captcha message and terminate a user.
               (do
                 (log/infof "Failed captcha attempt, chat-id: %s, user-id: %s, username: %s, solution: %s"
                            chat-id user-id user-name text)
@@ -229,6 +228,7 @@
                         (tg/delete-message telegram chat-id captcha-message-id)))
 
                     (terminate-user context chat-id user-id user-name)
+                    (state/del-attrs state chat-id user-id)
 
                     (when joined-message-id
                       (with-safe-log
