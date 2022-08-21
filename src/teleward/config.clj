@@ -17,18 +17,15 @@
 
      ["-l" "--logging.level LEVEL"
       "Logging level"
-      :default (get-in defaults [:logging :level])
-      :parse-fn keyword]
+      :default (get-in defaults [:logging :level])]
 
      ["-m" "--mode MODE"
       "Working mode: polling or webhook"
-      :default (get-in defaults [:mode])
-      :parse-fn keyword]
+      :default (get-in defaults [:mode])]
 
      [nil "--processing.ban-mode BAN_MODE"
       "What to do with users who didn't solve captcha in time (ban, restrict)"
-      :default (get-in defaults [:processing :ban-mode])
-      :parse-fn keyword]
+      :default (get-in defaults [:processing :ban-mode])]
 
      [nil "--webhook.path PATH"
       "Path for webhook handler"
@@ -59,13 +56,11 @@
 
      [nil "--language LANGUAGE"
       "Language of messages and captcha: en, ru"
-      :default (get-in defaults [:language])
-      :parse-fn keyword]
+      :default (get-in defaults [:language])]
 
      [nil "--captcha.style CAPTCHA_STYLE"
       "Captcha style: lisp or enything else."
-      :default (get-in defaults [:captcha :style])
-      :parse-fn keyword]]))
+      :default (get-in defaults [:captcha :style])]]))
 
 
 (defn kw->path

@@ -29,11 +29,10 @@
         (op->unicode op)
 
         form
-        (cond
-          (= :lisp captcha-style)
+        (case captcha-style
+          (:lisp "lisp")
           (format "(%s %s %s)" op-unicode var1 var2)
-
-          :else
+          ;; else
           (format "%s %s %s" var1 op-unicode var2))
 
         solution

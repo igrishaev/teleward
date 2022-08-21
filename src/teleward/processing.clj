@@ -40,19 +40,19 @@
         (-> config :processing :ban-mode)]
 
     (case ban-mode
-      :ban
+      (:ban "ban")
       (with-safe-log
         (tg/ban-user telegram chat-id user-id {:revoke-messages true})
         (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, username: %s"
                    chat-id user-id username))
 
-      :restrict
+      (:restrict "restrict")
       (with-safe-log
         (tg/restrict-user telegram chat-id user-id tg/chat-permissions-off)
         (log/infof "User restricted (captcha timeout), chat-id: %s, user-id: %s, username: %s"
                    chat-id user-id username))
 
-      :else
+      ;; else
       (log/warn "Ban mode is not set!"))))
 
 
@@ -252,10 +252,7 @@
            state
            config]}]
 
-  (let [ban-mode
-        (-> config :processing :ban-mode)
-
-        {{:keys [user-trail-period]} :polling}
+  (let [{{:keys [user-trail-period]} :polling}
         config
 
         unix-expired
@@ -268,7 +265,6 @@
             triples]
 
       (let [{:keys [username
-                    date-joined
                     joined-message-id
                     captcha-message-id]}
             attrs]

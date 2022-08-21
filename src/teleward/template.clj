@@ -39,9 +39,11 @@
 
 
 (defn get-captcha-template [locale]
-  (cond
-    (= locale :ru) captcha-ru
-    :else captcha-en))
+  (case locale
+    (:ru "ru") captcha-ru
+    (:en "en") captcha-en
+    ;; else
+    captcha-en))
 
 
 (defn render [template & [context]]
