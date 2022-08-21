@@ -30,8 +30,34 @@
     (<= (- now offset) time (+ now offset))))
 
 
-(defn process-update
+(defn terminate-user
   [{:as _context
+    :keys [telegram
+           config]}
+   chat-id user-id username]
+
+  (let [ban-mode
+        (-> config :processing :ban-mode)]
+
+    (case ban-mode
+      :ban
+      (with-safe-log
+        (tg/ban-user telegram chat-id user-id {:revoke-messages true})
+        (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, username: %s"
+                   chat-id user-id username))
+
+      :restrict
+      (with-safe-log
+        (tg/restrict-user telegram chat-id user-id tg/chat-permissions-off)
+        (log/infof "User restricted (captcha timeout), chat-id: %s, user-id: %s, username: %s"
+                   chat-id user-id username))
+
+      :else
+      (log/warn "Ban mode is not set!"))))
+
+
+(defn process-update
+  [{:as context
     :keys [config
            telegram
            state
@@ -187,7 +213,7 @@
                 (state/del-attrs state chat-id user-id))
 
               ;; otherwise, increase the number of attempts. When the attempts
-              ;; are over, delete the captcha message and ban a user. Keep the
+              ;; are over, delete the captcha message and terminate a user. Keep the
               ;; attributes for the next stage.
               (do
                 (log/infof "Failed captcha attempt, chat-id: %s, user-id: %s, username: %s, solution: %s"
@@ -195,15 +221,15 @@
                 (state/inc-attr state chat-id user-id :attempt)
                 (let [attempt
                       (state/get-attr state chat-id user-id :attempt)]
+
                   (when (> attempt user-trail-attempts)
+
                     (when captcha-message-id
                       (with-safe-log
                         (tg/delete-message telegram chat-id captcha-message-id)))
-                    (log/infof "User banned (captcha attempts), chat-id: %s, user-id: %s, username: %s"
-                               chat-id user-id user-name)
-                    (with-safe-log
-                      (tg/ban-user telegram chat-id user-id
-                                   {:revoke-messages true}))
+
+                    (terminate-user context chat-id user-id user-name)
+
                     (when joined-message-id
                       (with-safe-log
                         (tg/delete-message telegram chat-id joined-message-id)))))))))))))
@@ -221,7 +247,7 @@
   The `date-joined` attr tracks the date the user did join.
   Delete the captcha message, ban the user, drop the attributes.
   "
-  [{:as _context
+  [{:as context
     :keys [telegram
            state
            config]}]
@@ -251,21 +277,7 @@
           (with-safe-log
             (tg/delete-message telegram chat-id captcha-message-id)))
 
-        (case ban-mode
-          :ban
-          (with-safe-log
-            (tg/ban-user telegram chat-id user-id {:revoke-messages true})
-            (log/infof "User banned (captcha timeout), chat-id: %s, user-id: %s, username: %s, date joined: %s"
-                       chat-id user-id username date-joined))
-
-          :restrict
-          (with-safe-log
-            (tg/restrict-user telegram chat-id user-id tg/chat-permissions-off)
-            (log/infof "User restricted (captcha timeout), chat-id: %s, user-id: %s, username: %s, date joined: %s"
-                       chat-id user-id username date-joined))
-
-          :else
-          (log/warn "Ban mode is not set!"))
+        (terminate-user context chat-id user-id username)
 
         (when joined-message-id
           (with-safe-log
