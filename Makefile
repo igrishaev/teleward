@@ -9,12 +9,15 @@ PWD = $(shell pwd)
 
 PLATFORM = PLATFORM
 
+JAR = target/uberjar/teleward.jar
+
 NI_ARGS = \
 	--report-unsupported-elements-at-runtime \
 	--initialize-at-build-time \
+    --initialize-at-run-time=Random/SplittableRandom \
 	--no-fallback \
 	--allow-incomplete-classpath \
-	-jar ./target/uberjar/teleward.jar \
+	-jar ${JAR} \
 	-H:IncludeResources='^VERSION$$' \
 	-H:IncludeResources='^config.edn$$' \
 	--enable-url-protocols=http,https \
@@ -23,12 +26,10 @@ NI_ARGS = \
 	-H:Log=registerResource \
 	-H:Name=./builds/teleward-
 
-JAR = target/uberjar/teleward.jar
-
 ni-args:
 	echo ${NI_ARGS}
 
-build-binary-local: cleanup uberjar graal-build
+build-binary-local: ${JAR} graal-build
 
 cleanup:
 	rm -rf target
