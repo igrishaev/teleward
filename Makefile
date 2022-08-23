@@ -23,6 +23,8 @@ NI_ARGS = \
 	-H:Log=registerResource \
 	-H:Name=./builds/teleward-
 
+JAR = target/uberjar/teleward.jar
+
 ni-args:
 	echo ${NI_ARGS}
 
@@ -46,7 +48,7 @@ platform-local:
 platform-docker:
 	docker run -it --rm --entrypoint /bin/sh ${NI_TAG} -c 'echo `uname -s`-`uname -m`' > ${PLATFORM}
 
-build-binary-docker: uberjar platform-docker
+build-binary-docker: ${JAR} platform-docker
 	docker run -it --rm -v ${PWD}:/build -w /build ${NI_TAG} ${NI_ARGS}$(shell cat ${PLATFORM})
 
 toc-install:
@@ -74,5 +76,5 @@ yc-repl:
 
 PACKAGE=package.zip
 
-bash-package: build-binary-docker
+bash-package: yc-jar build-binary-docker
 	zip -j ${PACKAGE} conf/handler.sh builds/teleward-Linux-x86_64
