@@ -49,7 +49,8 @@
      *assert* true}}
 
    :yc-function
-   {:dependencies [[com.taoensso/faraday "1.11.4"]
+   {:main ^:skip-aot teleward.yc-function.bash
+    :dependencies [[com.taoensso/faraday "1.11.4"]
                    [javax.servlet/javax.servlet-api "4.0.1"]]
     :source-paths ["profile/yc_function"]}
 
