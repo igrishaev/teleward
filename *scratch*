@@ -90,3 +90,44 @@ read-system-env
 
 (b64-decode "aGVsbG8sIHdvcmxkIQ==")
 "hello, world!"
+
+
+ 	at java.util.Random.<init>(Random.java:109)
+	at com.amazonaws.retry.PredefinedBackoffStrategies$EqualJitterBackoffStrategy.<init>(PredefinedBackoffStrategies.java:82)
+	at com.amazonaws.retry.PredefinedBackoffStrategies$SDKDefaultBackoffStrategy.<init>(PredefinedBackoffStrategies.java:138)
+	at com.amazonaws.retry.PredefinedRetryPolicies.<clinit>(PredefinedRetryPolicies.java:95)
+	at com.amazonaws.ClientConfiguration.<clinit>(ClientConfiguration.java:89)
+
+
+
+
+export TELEGRAM_TOKEN=''
+export DOMAIN='teleward.org'
+
+export DYNAMODB_ENDPOINT=
+export AWS_ACCESS_KEY_ID=
+export AWS_SECRET_ACCESS_KEY=
+export DYNAMODB_TABLE=table258
+
+
+(count "{\"TableName\": \"Pets\",\"Key\": {\"AnimalType\": {\"S\": \"Dog\"},\"Name\": {\"S\": \"Fido\"}}}")
+79
+
+(let [])
+
+
+(clj-aws-sign.core/authorize
+    {:method "POST" :uri "ru-central1/b1gubqioel64r9cndf34/etnt9ta5kihjldo7st94"
+     :date "20220823T140808Z"
+     :headers {"host" "somehost"}
+     :body "{\"TableName\": \"Pets\",\"Key\": {\"AnimalType\": {\"S\": \"Dog\"},\"Name\": {\"S\": \"Fido\"}}}"
+     :service "dynamodb"
+     :region "ru-central1"
+     :access-key "" :secret-key ""})
+
+
+
+"https://cloud.yandex.ru/docs/ydb/docapi/api-ref/actions/getItem"
+
+(str (new java.util.Date))
+"Tue Aug 23 17:17:15 MSK 2022"

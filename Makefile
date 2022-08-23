@@ -12,15 +12,15 @@ PLATFORM = PLATFORM
 JAR = target/uberjar/teleward.jar
 
 NI_ARGS = \
-	--report-unsupported-elements-at-runtime \
 	--initialize-at-build-time \
-    --initialize-at-run-time=Random/SplittableRandom \
+	--report-unsupported-elements-at-runtime \
 	--no-fallback \
-	--allow-incomplete-classpath \
 	-jar ${JAR} \
 	-H:IncludeResources='^VERSION$$' \
 	-H:IncludeResources='^config.edn$$' \
-	--enable-url-protocols=http,https \
+	--enable-http \
+	--enable-https \
+	-H:+PrintClassInitialization \
 	-H:ReflectionConfigurationFiles=reflection-config.json \
 	-H:+ReportExceptionStackTraces \
 	-H:Log=registerResource \

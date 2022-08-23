@@ -50,8 +50,15 @@
 
    :yc-function
    {:main ^:skip-aot teleward.yc-function.bash
-    :dependencies [[com.taoensso/faraday "1.11.4"]
-                   [javax.servlet/javax.servlet-api "4.0.1"]]
+    :dependencies [
+                   [clj-aws-sign "0.1.1"]
+
+                   [amazonica "0.3.156"
+                    :exclusions
+                    [com.amazonaws/aws-java-sdk
+                     com.amazonaws/amazon-kinesis-client
+                     com.amazonaws/dynamodb-streams-kinesis-adapter]]
+                   [com.amazonaws/aws-java-sdk-dynamodb "1.12.263"]]
     :source-paths ["profile/yc_function"]}
 
    :uberjar

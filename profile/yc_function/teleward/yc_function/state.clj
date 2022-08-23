@@ -3,7 +3,14 @@
   DynamoDB/YandexDB-driven state.
   "
   (:require
+   [amazonica.core]
+
+   [clj-aws-sign.core :as aws-sign]
+
+
+   ;; [amazonica.aws.dynamodbv2 :as dynamodb]
    [clojure.string :as str]
+   #_
    [taoensso.faraday :as far]
    [teleward.state.api :as api]))
 
@@ -37,6 +44,7 @@
   (dissoc row :chat_id :user_id))
 
 
+#_
 (defrecord DynamoDBState
     [access-key
      secret-key
@@ -104,6 +112,7 @@
       (throw (new Exception (format "The '%s' environment variable not set!" env-name)))))
 
 
+#_
 (defn make-state [& [_options]]
   (map->DynamoDBState
    {:access-key (get-env "AWS_ACCESS_KEY_ID")
@@ -136,3 +145,56 @@
   (api/filter-by-attr -s :counter :> 0)
 
   )
+
+
+(let [method "POST"
+      service "dynamodb"
+      host "docapi.serverless.yandexcloud.net"
+      region "ru-central1"
+      endpoint "https://docapi.serverless.yandexcloud.net/"
+      content-type "application/x-amz-json-1.0"
+      amz_target "DynamoDB_20120810.GetItem"
+
+      payload
+      (cheshire.core/generate-string
+       {:TableName "table258"
+        :Key {"chat_id" {"N" "1"}
+              "user_id" {"N" "1"}}})
+
+      content-length
+      (count payload)
+
+      uri "/ru-central1/..."
+
+      date
+      "20220823T150056Z"
+
+      auth-header
+      (clj-aws-sign.core/authorize
+       {:method method
+        :uri uri
+        :date date
+        :headers {"host" host
+                  "content-type" content-type
+                  "x-amz-date" date
+                  "x-amz-target" amz_target}
+        :payload payload
+        :service service
+        :region region
+        :access-key ""
+        :secret-key ""})
+
+      headers
+      {"authorization" auth-header
+       "content-type" content-type
+       "x-amz-target" amz_target
+       "x-amz-date" date}
+
+      response
+      (org.httpkit.client/request
+       {:method :post
+        :url "https://docapi.serverless.yandexcloud.net/..."
+        :body payload
+        :headers headers})]
+
+  (:body @response))
