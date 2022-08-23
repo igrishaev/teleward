@@ -83,3 +83,10 @@ read-system-env
 (command? {:me {:username "igrishaev_bot"}} "/health@igrishaev_bot" "health")
 
 (command? {:me {:username "igrishaev_bot"}} "/health" "health")
+
+
+(-> "sdfsdf" (.getBytes) (String.))
+"sdfsdf"
+
+(b64-decode "aGVsbG8sIHdvcmxkIQ==")
+"hello, world!"

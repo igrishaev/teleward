@@ -12,7 +12,8 @@
  :logging
  {:level :info
   :pattern "%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"
-  :console true
+  :console {:name "console"
+            :target "out"}
   :file "logs/teleward.log"}
 
  :captcha
