@@ -1,28 +1,18 @@
 (ns teleward.template)
 
 (def captcha-ru
-  ["Привет, "
-   :user
-   "! Чтобы присоединиться, напишите решение задачи:"
-   \newline
+  ["Привет, " :user "! Чтобы присоединиться, решите задачу: "
    \newline
    :captcha
    \newline
-   \newline
-   "До тех пор сообщения будут удаляться, и скоро вас исключат."])
+   "До тех пор вы не сможете писать сообщения, и скоро вас удалят."])
 
 
 (def captcha-en
-
-  ["Hello "
-   :user
-   "! In order to participate, please provide an answer to the following arithmetic expression:"
-   \newline
-   \newline
+  ["Hello " :user "! In order to participate, please solve an expression: "
    :captcha
    \newline
-   \newline
-   "Until then, your messages will be deleted, and you will be kicked soon."])
+   "Until then, you cannot send messages, and you will be kicked soon."])
 
 
 (defn user-mention [user]

@@ -1,6 +1,31 @@
 (ns teleward.captcha)
 
 
+(defn gen-rands [limit cols rows]
+  (into {}
+        (for [r (range rows)
+              c (range cols)]
+          [[r c] (rand-int limit)])))
+
+
+(defn add-solution [rands solution cols rows]
+  (let [r (rand-int rows)
+        c (rand-int cols)]
+    (assoc rands [r c] solution)))
+
+
+(defn gen-buttons [solution limit cols rows]
+  (let [rands
+        (-> limit
+            (gen-rands cols rows)
+            (add-solution solution cols rows))]
+    (for [r (range rows)]
+      (for [c (range cols)]
+        (let [text
+              (str (get rands [r c]))]
+          {:text text :callback_data text})))))
+
+
 (defn op->unicode [op]
   (case op
     + "\u002B"
@@ -40,5 +65,6 @@
           + (+ var1 var2)
           - (- var1 var2)
           * (* var1 var2))]
+
 
     [form (str solution)]))

@@ -1,0 +1,85 @@
+; -*- mode: cider-clojure-interaction -*-
+
+
+-doPost
+#function[teleward.yc-function.handler/-doPost]
+
+*ns*
+#namespace[teleward.processing]
+
+
+(cprop/load-config
+ :resource "config.edn"
+ :merge [{:telegram {:token "AAAAA"}}
+         {:telegram {:token nil}}]
+ )
+
+
+(cli-options->config nil)
+{}
+
+(println "\u1D465\u27F6\u221E")
+nil
+
+(->> buttons-med shuffle (take 2))
+
+(->> buttons-small shuffle (take 2))
+
+(gen-buttons "42")
+[[{:text "rm -rf node_modules", :callback_data "wrong"}
+  {:text ":[|||]:", :callback_data "f*ck"}]
+ [{:text "теперь компьютер можно отключить", :callback_data "no"}]
+ [{:text "pi/e", :callback_data "nope"} {:text "42", :callback_data "42"}]]
+
+(range 3)
+(0 1 2)
+
+
+
+
+
+
+(rand-seq 9 99)
+(7 50 11 52 81 42 1 86 73)
+
+
+(gen-buttons "-23" 20 3 2)
+
+
+(make-config)
+
+
+read-system-env
+#function[cprop.source/read-system-env]
+
+
+
+
+(def teleward.config
+  (in-ns 'teleward.config))
+
+(-> :processing.ban-mode
+    (str)
+    (subs 1)
+    (clojure.string/upper-case)
+    (str/replace #"\." "__")
+    (str/replace #"-" "_")
+    )
+"PROCESSING__BAN_MODE"
+
+
+
+
+
+(def teleward.processing
+  (in-ns 'teleward.config))
+
+
+
+
+(user-mention {:first_name "Ivan"})
+
+
+(command? {:me {:username "igrishaev_bot"}} "/health@igrishaev_bot" "health")
+
+(command? {:me {:username "igrishaev_bot"}} "/health" "health")

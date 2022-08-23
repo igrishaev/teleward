@@ -1,6 +1,5 @@
 (ns teleward.processing
   (:require
-   [clojure.string :as str]
    [clojure.tools.logging :as log]
    [teleward.captcha :as captcha]
    [teleward.state.api :as state]
@@ -8,17 +7,6 @@
    [teleward.template :as template]
    [teleward.time :refer [unix-now]]
    [teleward.util :refer [with-safe-log]]))
-
-
-(defn looks-solution?
-  "
-  True if a message *might be* (but not for sure)
-  a solution for captcha (pretty short).
-  "
-  [text len-threshold]
-  (and
-   (not (str/blank? text))
-   (<= (count text) len-threshold)))
 
 
 (defn almost-now
@@ -56,183 +44,272 @@
       (log/warn "Ban mode is not set!"))))
 
 
-(defn process-update
-  [{:as context
-    :keys [config
-           telegram
-           state
-           me]}
-   update-entry]
+(defn delete-message [{:keys [telegram]} chat-id message-id]
+  (when message-id
+    (with-safe-log
+      (tg/delete-message telegram chat-id message-id))))
 
-  (let [;; destruct the config vars in advance
+
+(defn get-full-name [user]
+  (let [{:keys [first_name
+                last_name]}
+        user]
+    (str first_name
+         (when last_name
+           (str " " last_name)))))
+
+
+(defn process-new-member
+  [context message member]
+
+  (let [{:keys [state config telegram]}
+        context
+
         {:keys [language]
-         {:keys [user-trail-attempts
-                 message-expires
-                 solution-threshold]} :polling
          {captcha-style :style} :captcha}
         config
 
-        {:keys [message]}
-        update-entry
-
-        {:keys [chat
-                from
-                date
-                text
-                ;; forward_date
-                ;; forward_sender_name
-                message_id
-                new_chat_members
-                left_chat_member]}
+        {:keys [date
+                chat
+                message_id]}
         message
-
-        {my-id :id}
-        me
 
         {chat-id :id}
         chat
 
-        {user-id :id
-         user-name :username}
-        from]
+        {member-id :id
+         member-username :username
+         member-first-name :first_name
+         member-last-name :last_name}
+        member
 
-    ;; process only recent updates
-    (when (and message
-               (almost-now date message-expires))
+        member-full-name
+        (str member-first-name
+             (when member-last-name
+               (str " " member-last-name)))]
 
-      ;; for each new member...
-      (doseq [member new_chat_members
-              :let [{member-id :id
-                     member-username :username
-                     member-first-name :first_name
-                     member-last-name :last_name} member
+    (state/set-attrs state chat-id member-id
+                     {:locked? true
+                      :date-joined date
+                      :joined-message-id message_id
+                      :username (or member-username member-full-name)
+                      :attempt 0})
 
-                    ;; compose the full name
-                    member-full-name
-                    (str member-first-name
-                         (when member-last-name
-                           (str " " member-last-name)))]
+    (log/infof "Locking a new member, chat-id: %s, user-id: %s, username: %s, date: %s"
+               chat-id member-id member-username date)
 
-              ;; except our bot
-              :when (not= my-id member-id)]
+    (let [[captcha-text captcha-solution]
+          (captcha/make-captcha captcha-style)
 
-        ;; mark it as locked
-        (state/set-attrs state chat-id member-id
-                         {:locked? true
-                          :date-joined date
-                          :joined-message-id message_id
-                          :username (or member-username member-full-name)
-                          :attempt 0})
+          template-context
+          {:user (template/user-mention member)
+           :captcha [:code captcha-text]}
 
-        (log/infof "Locking a new member, chat-id: %s, user-id: %s, username: %s, date: %s"
-                   chat-id member-id member-username date)
+          template
+          (template/get-captcha-template language)
 
-        ;; send captcha
-        (let [[captcha-text captcha-solution]
-              (captcha/make-captcha captcha-style)
+          {entities :entities
+           captcha-message :message}
+          (template/render template template-context)
 
-              template-context
-              {:user (template/user-mention member)
-               :captcha [:code captcha-text]}
+          buttons
+          (captcha/gen-buttons captcha-solution 99 3 2)
 
-              template
-              (template/get-captcha-template language)
+          ;; track the id of the captcha message
+          {captcha-message-id :message_id}
+          (with-safe-log
+            (tg/send-message telegram
+                             chat-id
+                             captcha-message
+                             {:entities entities
+                              :reply-markup {:inline_keyboard buttons}}))]
 
-              {entities :entities
-               captcha-message :message}
-              (template/render template template-context)
+      (state/set-attrs state chat-id member-id
+                       {:captcha-text captcha-text
+                        :captcha-solution captcha-solution
+                        :captcha-message-id captcha-message-id})
 
-              ;; track the id of the captcha message
-              {captcha-message-id :message_id}
+      (log/infof "Captcha sent, chat-id: %s, user-id: %s, username: %s, text: %s, solution: %s, message-id: %s"
+                 chat-id member-id member-username captcha-text captcha-solution captcha-message-id)
+
+      (with-safe-log
+        (tg/restrict-user telegram chat-id member-id tg/chat-permissions-off))
+
+      (log/infof "User restricted, chat-id: %s, user-id: %s, username: %s"
+                 chat-id member-id member-username))))
+
+
+(defn process-new-members
+  [context message]
+  (let [{:keys [me]}
+        context
+
+        {:keys [new_chat_members]}
+        message]
+
+    (doseq [member new_chat_members
+            :when (not= (:id me) (:id member))]
+
+      (process-new-member context message member))))
+
+
+(defn command? [context text command]
+  (let [{:keys [me]}
+        context
+
+        {:keys [username]}
+        me]
+
+    (or (= text (str "/" command))
+        (= text (str "/" command "@" username)))))
+
+
+(defn process-text
+  [context message]
+
+  (let [{:keys [telegram]}
+        context
+
+        {:keys [chat
+                text
+                message_id]}
+        message
+
+        {chat-id :id}
+        chat]
+
+    (cond
+
+      (command? context text "health")
+      (with-safe-log
+        (tg/send-message telegram
+                         chat-id
+                         "OK"
+                         {:reply-to-message-id message_id})))))
+
+
+(defn process-message
+  [context message]
+
+  (let [{:keys [config]}
+        context
+
+        {{:keys [message-expires]} :polling}
+        config
+
+        {:keys [text
+                date
+                new_chat_members]}
+        message]
+
+    (cond
+
+      new_chat_members
+      (when (almost-now date message-expires)
+        (process-new-members context message))
+
+      text
+      (process-text context message))))
+
+
+(defn process-callback-query
+  [context callback-query]
+
+  (let [{:keys [state
+                config
+                telegram]}
+        context
+
+        {{:keys [user-trail-attempts]} :polling}
+        config
+
+        {callback-id :id
+         :keys [from
+                data
+                message]}
+        callback-query
+
+        {:keys [chat]}
+        message
+
+        {chat-id :id}
+        chat
+
+        {user-id :id}
+        from
+
+        user-name
+        (get-full-name from)
+
+        {:keys [locked?
+                captcha-solution
+                captcha-message-id
+                joined-message-id]}
+        (state/get-attrs state chat-id user-id)]
+
+    (if-not locked?
+
+      (with-safe-log
+        (tg/answer-callback-query telegram callback-id))
+
+      (if (= captcha-solution data)
+
+        ;; solved
+        (do
+          (log/infof "Captcha solved, chat-id: %s, user-id: %s, username: %s, solution: %s"
+                     chat-id user-id user-name data)
+          (delete-message context chat-id captcha-message-id)
+          (with-safe-log
+            (tg/restrict-user telegram chat-id user-id tg/chat-permissions-on))
+          (state/del-attrs state chat-id user-id)
+          (with-safe-log
+            (tg/answer-callback-query telegram
+                                      callback-id
+                                      {:text "Спасибо, ограничения сняты."
+                                       :show-alert? true})))
+
+        ;; otherwise
+        (do
+          (log/infof "Failed captcha attempt, chat-id: %s, user-id: %s, username: %s, solution: %s"
+                     chat-id user-id user-name data)
+          (state/inc-attr state chat-id user-id :attempt)
+          (let [attempt
+                (state/get-attr state chat-id user-id :attempt)]
+
+            ;; no more attempts
+            (if (> attempt user-trail-attempts)
+
+              (do
+                (delete-message context chat-id captcha-message-id)
+                (terminate-user context chat-id user-id user-name)
+                (state/del-attrs state chat-id user-id)
+                (delete-message context chat-id joined-message-id)
+                (with-safe-log
+                  (tg/answer-callback-query telegram
+                                            callback-id
+                                            {:text "Попытки кончились."
+                                             :show-alert? true})))
+
               (with-safe-log
-                (tg/send-message telegram
-                                 chat-id
-                                 captcha-message
-                                 {:entities entities}))]
+                (tg/answer-callback-query telegram
+                                          callback-id
+                                          {:text "Ответ неверный."
+                                           :show-alert? true})))))))))
 
-          (log/infof "Captcha sent, chat-id: %s, user-id: %s, username: %s, text: %s, solution: %s, message-id: %s"
-                     chat-id member-id member-username captcha-text captcha-solution captcha-message-id)
 
-          (state/set-attrs state chat-id member-id
-                           {:captcha-text captcha-text
-                            :captcha-solution captcha-solution
-                            :captcha-message-id captcha-message-id})))
+(defn process-update
+  [context update-entry]
 
-      ;; check left members
-      (when left_chat_member
-        (let [{member-id :id}
-              left_chat_member
-              captcha-message-id
-              (state/get-attr state chat-id member-id :captcha-message-id)]
-          ;; just delete captcha message
-          (when captcha-message-id
-            (with-safe-log
-              (tg/delete-message telegram chat-id captcha-message-id)))))
+  (let [{:keys [message
+                callback_query]}
+        update-entry]
 
-      ;; check for commands
-      (when (= text "/health")
-        (with-safe-log
-          ;; TODO: provide uptime report
-          (tg/send-message telegram chat-id "OK")))
+    (cond
+      message
+      (process-message context message)
 
-      ;; check the current message for captcha
-      (let [{:keys [locked?
-                    captcha-text
-                    captcha-solution
-                    captcha-message-id
-                    joined-message-id]}
-            (state/get-attrs state chat-id user-id)]
-
-        ;; if the current user is locked...
-        (when (and locked?
-                   captcha-text
-                   captcha-solution)
-
-          ;; ...and the message was not about a newcomer...
-          (when-not new_chat_members
-            ;; ...log and delete it
-            (log/infof "Message from a locked user, chat-id: %s, user-id: %s, username: %s, text: %s"
-                       chat-id user-id user-name text)
-            (with-safe-log
-              (tg/delete-message telegram chat-id message_id)))
-
-          ;; if it was a text message...
-          (when text
-
-            ;; ...and it solves the captcha...
-            (if (and (looks-solution? text solution-threshold)
-                     (= (str/trim text) captcha-solution))
-
-              ;; ...delete the captcha message and reset all the attributes
-              (do
-                (log/infof "Captcha solved, chat-id: %s, user-id: %s, username: %s, solution: %s"
-                           chat-id user-id user-name text)
-                (when captcha-message-id
-                  (with-safe-log
-                    (tg/delete-message telegram chat-id captcha-message-id)))
-                (state/del-attrs state chat-id user-id))
-
-              ;; otherwise, increase the number of attempts. When the attempts
-              ;; are over, delete the captcha message and terminate a user.
-              (do
-                (log/infof "Failed captcha attempt, chat-id: %s, user-id: %s, username: %s, solution: %s"
-                           chat-id user-id user-name text)
-                (state/inc-attr state chat-id user-id :attempt)
-                (let [attempt
-                      (state/get-attr state chat-id user-id :attempt)]
-
-                  (when (> attempt user-trail-attempts)
-
-                    (when captcha-message-id
-                      (with-safe-log
-                        (tg/delete-message telegram chat-id captcha-message-id)))
-
-                    (terminate-user context chat-id user-id user-name)
-                    (state/del-attrs state chat-id user-id)
-
-                    (when joined-message-id
-                      (with-safe-log
-                        (tg/delete-message telegram chat-id joined-message-id)))))))))))))
+      callback_query
+      (process-callback-query context callback_query))))
 
 
 (defn process-updates
@@ -248,8 +325,7 @@
   Delete the captcha message, ban the user, drop the attributes.
   "
   [{:as context
-    :keys [telegram
-           state
+    :keys [state
            config]}]
 
   (let [{{:keys [user-trail-period]} :polling}
@@ -269,14 +345,7 @@
                     captcha-message-id]}
             attrs]
 
-        (when captcha-message-id
-          (with-safe-log
-            (tg/delete-message telegram chat-id captcha-message-id)))
-
+        (delete-message context chat-id captcha-message-id)
         (terminate-user context chat-id user-id username)
-
-        (when joined-message-id
-          (with-safe-log
-            (tg/delete-message telegram chat-id joined-message-id)))
-
+        (delete-message context chat-id joined-message-id)
         (state/del-attrs state chat-id user-id)))))

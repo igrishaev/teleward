@@ -261,3 +261,36 @@
   "text":"/start"
 }
 }
+
+
+{:update_id 75640711,
+ :callback_query
+ {:id "959622145778160373",
+  :from
+  {:id 223429441,
+   :is_bot false,
+   :first_name "Ivan",
+   :last_name "Grishaev",
+   :username "igrishaev",
+   :language_code "en"},
+  :message
+  {:message_id 742,
+   :from
+   {:id 882763008,
+    :is_bot true,
+    :first_name "Ivan Grishaev's Bot",
+    :username "igrishaev_bot"},
+   :chat
+   {:id -721166690,
+    :title "sss",
+    :type "group",
+    :all_members_are_administrators true},
+   :date 1657729194,
+   :text "hello!",
+   :reply_markup
+   {:inline_keyboard
+    [[{:text "a", :callback_data "aaa"}
+      {:text "b", :callback_data "bbb"}
+      {:text "c", :callback_data "ccc"}]]}},
+  :chat_instance "-2767002656552552926",
+  :data "ccc"}}

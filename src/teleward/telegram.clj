@@ -243,6 +243,26 @@
                  :until_date until_date})))
 
 
+(defn answer-callback-query
+  "https://core.telegram.org/bots/api#answercallbackquery"
+
+  ([config callback-query-id]
+   (answer-callback-query config callback-query-id nil))
+
+  ([config callback-query-id {:keys [url
+                                     text
+                                     show-alert?
+                                     cache-time]}]
+   (api-request config
+                :answerCallbackQuery
+                :post
+                {:callback_query_id callback-query-id
+                 :text text
+                 :show_alert show-alert?
+                 :url url
+                 :cache_time cache-time})))
+
+
 ;;
 ;; Dev
 ;;

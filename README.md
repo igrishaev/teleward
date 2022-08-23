@@ -15,6 +15,7 @@ image. Runs on bare Linux/MacOS with no requirements. Fast and robust.
 - [Binary version, MacOS](#binary-version-macos)
 - [Setting Up Your Bot](#setting-up-your-bot)
 - [Configuration](#configuration)
+- [Env vars](#env-vars)
 - [Deploying on bare Ubuntu](#deploying-on-bare-ubuntu)
 - [Webhook mode](#webhook-mode)
 - [AWS/Yandex Cloud deployment](#awsyandex-cloud-deployment)
