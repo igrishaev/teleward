@@ -71,3 +71,8 @@ yc-jar:
 
 yc-repl:
 	lein with-profile +yc-function repl
+
+PACKAGE=package.zip
+
+bash-package: build-binary-docker
+	zip -j ${PACKAGE} conf/handler.sh builds/teleward-Linux-x86_64

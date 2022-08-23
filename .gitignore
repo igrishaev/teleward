@@ -22,3 +22,4 @@ package.json
 builds/teleward-*
 secrets.env
 PLATFORM
+package.zip
