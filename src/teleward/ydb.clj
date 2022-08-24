@@ -1,4 +1,9 @@
 (ns teleward.ydb
+  "
+  https://cloud.yandex.ru/docs/ydb/docapi/api-ref/actions/updateItem
+  https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.UpdateExpressions.html
+
+  "
   (:require
    [clojure.string :as str]
    [clj-aws-sign.core :as aws-sign]
