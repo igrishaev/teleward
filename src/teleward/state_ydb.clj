@@ -60,12 +60,16 @@
                       {:add {attr 1}})))
 
   (filter-by-attr [_ attr op value]
-    (:Items
-     (ydb/scan client
-               table
-               {:filter-expr (format "#attr %s :value" (name op))
-                :attr-names {:attr attr}
-                :attr-values {:value value}}))))
+    (let [{:keys [Items]}
+          (ydb/scan client
+                    table
+                    {:filter-expr (format "#attr %s :value" (name op))
+                     :attr-names {:attr attr}
+                     :attr-values {:value value}})]
+      (for [{:as item
+             :keys [chat_id
+                    user_id]} Items]
+        [chat_id user_id item]))))
 
 
 (defn get-env [env-name]
@@ -109,6 +113,8 @@
 
   (state/inc-attr -s 3 5 :test/bbb)
   (state/get-attrs -s 3 5)
+
+  (state/filter-by-attr -s :date-joined '> 0)
 
   (state/filter-by-attr -s :test/aaa '= 123)
 
