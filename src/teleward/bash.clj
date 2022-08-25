@@ -51,11 +51,12 @@
      :config config}))
 
 
-(defn reply [status body]
+(defn reply [status message]
   (println
    (json/generate-string
     {:statusCode status
-     :body body
+     :headers {:content-type "text/plain"}
+     :body message
      :isBase64Encoded false})))
 
 

@@ -77,5 +77,5 @@ ydb-repl:
 
 PACKAGE=package.zip
 
-bash-package: yc-jar build-binary-docker
+bash-package: ydb-jar build-binary-docker
 	zip -j ${PACKAGE} conf/handler.sh builds/teleward-Linux-x86_64
