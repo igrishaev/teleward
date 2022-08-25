@@ -226,6 +226,35 @@
          (dissoc tmp)))))
 
 
+(defn make-add-params
+  ([mapping]
+   (make-add-params nil mapping))
+
+  ([scope mapping]
+   (let [tmp :__pairs
+
+         scope-new
+         (reduce-kv
+          (fn [result k v]
+            (let [attr-sym (gensym "attr")]
+              (-> result
+                  (update tmp (fnil conj [])
+                          (format "#%s :%s" attr-sym attr-sym))
+                  (assoc-in [:ExpressionAttributeNames (str "#" attr-sym)]
+                            (attr-encode k))
+                  (assoc-in [:ExpressionAttributeValues (str ":" attr-sym)]
+                            (value-encode v)))))
+          scope
+          mapping)]
+
+     (-> scope-new
+         (update :UpdateExpression
+                 str
+                 " ADD "
+                 (str/join ", " (get scope-new tmp)))
+         (dissoc tmp)))))
+
+
 (defn make-remove-params
   ([attrs]
    (make-remove-params nil attrs))
@@ -266,12 +295,23 @@
 ;; API
 ;;
 
-(defn get-item [client table pk]
-  (let [response
-        (make-request client "GetItem"
-                      {:TableName table
-                       :Key (item-encode pk)})]
-    (update response :Item item-decode)))
+(defn get-item
+  ([client table pk]
+   (get-item client table pk nil))
+
+  ([client table pk {:keys [attrs]}]
+   (let [params
+         (cond-> {:TableName table
+                  :Key (item-encode pk)}
+
+           attrs
+           (assoc :AttributesToGet
+                  (mapv attr-encode attrs)))
+
+         response
+         (make-request client "GetItem" params)]
+
+     (update response :Item item-decode))))
 
 
 
@@ -303,7 +343,7 @@
 (defn update-item [client table pk {:keys [add
                                            set
                                            remove
-                                           delete
+                                           ;; delete
                                            return
                                            cond-expression]}]
   (let [params
@@ -316,8 +356,8 @@
           cond-expression
           (assoc :ConditionExpression cond-expression)
 
-          ;; add
-          ;; (make-add-params add)
+          add
+          (make-add-params add)
 
           set
           (make-set-params set)
@@ -412,6 +452,7 @@
 
 
 
+#_
 (comment
 
   (def -r (get-item -c "table258" {:chat_id 1 :user_id 5}))

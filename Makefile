@@ -67,7 +67,7 @@ docker-run:
 	docker run -it --rm ${TAG}
 
 lint:
-	clj-kondo --lint src --lint profile
+	clj-kondo --lint src
 
 ydb-jar:
 	lein with-profile +ydb uberjar

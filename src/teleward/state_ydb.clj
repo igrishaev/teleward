@@ -17,64 +17,55 @@
 
   state/IState
 
-  (set-attr [this chat-id user-id attr val]
+  (set-attr [_ chat-id user-id attr val]
     (:Attributes
      (ydb/update-item client
                       table
                       (pk chat-id user-id)
                       {:set {attr val}})))
 
-  (set-attrs [this chat-id user-id mapping]
+  (set-attrs [_ chat-id user-id mapping]
     (:Attributes
      (ydb/update-item client
                       table
                       (pk chat-id user-id)
                       {:set mapping})))
 
-  #_
-  (get-attr [this chat-id user-id attr]
-    (-> (far/get-item this
-                      table
-                      (pk chat-id user-id)
-                      {:attrs [(->attr attr)]})
-        (get attr)))
+  (get-attr [_ chat-id user-id attr]
+    (get-in
+     (ydb/get-item client
+                   table
+                   (pk chat-id user-id)
+                   {:attrs [attr]})
+     [:Item attr]))
 
-  (get-attrs [this chat-id user-id]
+  (get-attrs [_ chat-id user-id]
     (:Item (ydb/get-item client table (pk chat-id user-id))))
 
-  #_
-  (del-attr [this chat-id user-id attr]
-    (far/update-item this
-                     table
-                     (pk chat-id user-id)
-                     {:update-expr "REMOVE #attr"
-                      :expr-attr-names {"#attr" (->attr attr)}}))
+  (del-attr [_ chat-id user-id attr]
+    (:Attributes
+     (ydb/update-item client
+                      table
+                      (pk chat-id user-id)
+                      {:remove [attr]})))
 
-  #_
-  (del-attrs [this chat-id user-id]
-    (far/delete-item this table (pk chat-id user-id)))
+  (del-attrs [_ chat-id user-id]
+    (ydb/delete-item client table (pk chat-id user-id)))
 
-  #_
-  (inc-attr [this chat-id user-id attr]
-    (far/update-item this
-                     table
-                     (pk chat-id user-id)
-                     {:update-expr "SET #attr = #attr + :delta"
-                      :expr-attr-vals {":delta" 1}
-                      :expr-attr-names {"#attr" (->attr attr)}}))
+  (inc-attr [_ chat-id user-id attr]
+    (:Attributes
+     (ydb/update-item client
+                      table
+                      (pk chat-id user-id)
+                      {:add {attr 1}})))
 
-  #_
-  (filter-by-attr [this attr op value]
-    (let [scan-params
-          {:attr-conds {(->attr attr) [op value]}}
-
-          result
-          (far/scan this table scan-params)]
-
-      (into []
-            (for [{:as row :keys [chat_id user_id]}
-                  result]
-              [chat_id user_id (cleanup-pk row)])))))
+  (filter-by-attr [_ attr op value]
+    (:Items
+     (ydb/scan client
+               table
+               {:filter-expr (format "#attr %s :value" (name op))
+                :attr-names {:attr attr}
+                :attr-values {:value value}}))))
 
 
 (defn get-env [env-name]
@@ -102,9 +93,9 @@
 
   (def -s (make-state))
 
-  (state/get-attrs -s 2 1)
+  (state/get-attrs -s 3 5)
 
-  (state/get-attr -s 2 1 :user-name)
+  (state/get-attr -s 3 5 :kek)
 
   (state/set-attr -s 2 1 :user-name "John")
 
@@ -116,8 +107,9 @@
 
   (state/set-attrs -s 2 1 {:counter 0})
 
-  (state/inc-attr -s 2 1 :counter)
+  (state/inc-attr -s 3 5 :test/bbb)
+  (state/get-attrs -s 3 5)
 
-  (state/filter-by-attr -s :counter :> 0)
+  (state/filter-by-attr -s :test/aaa '= 123)
 
   )

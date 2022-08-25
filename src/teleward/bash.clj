@@ -67,14 +67,17 @@
         yc-request
         (json/parse-stream *in* keyword)
 
-        {:keys [
-                ;; httpMethod
-                ;; headers
-                ;; path
+        {:keys [httpMethod
+                headers
+                path
                 ;; queryStringParameters
                 body
                 isBase64Encoded]}
         yc-request
+
+        _
+        (log/infof "HTTP request, method: %s, path: %s, headers: %s"
+                   httpMethod path headers)
 
         body-decoded
         (if isBase64Encoded
