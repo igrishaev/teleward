@@ -69,11 +69,11 @@ docker-run:
 lint:
 	clj-kondo --lint src --lint profile
 
-yc-jar:
-	lein with-profile +yc-function uberjar
+ydb-jar:
+	lein with-profile +ydb uberjar
 
-yc-repl:
-	lein with-profile +yc-function repl
+ydb-repl:
+	lein with-profile +ydb repl
 
 PACKAGE=package.zip
 

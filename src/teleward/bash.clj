@@ -1,4 +1,4 @@
-(ns teleward.yc-function.bash
+(ns teleward.bash
   ;; https://cloud.yandex.ru/docs/functions/concepts/function-invoke#request
   (:require
    [cheshire.core :as json]
@@ -6,7 +6,7 @@
    [teleward.config :as config]
    [teleward.logging :as logging]
    [teleward.processing :as processing]
-   [teleward.yc-function.state :as state]
+   [teleward.state-ydb :as state-ydb]
    [teleward.telegram :as tg])
   (:import java.util.Base64)
   (:gen-class))
@@ -38,7 +38,7 @@
         (tg/get-me telegram)
 
         state
-        (state/make-state)
+        (state-ydb/make-state)
 
         {:keys [telegram]}
         config]

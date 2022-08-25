@@ -2,18 +2,17 @@
   "
   https://cloud.yandex.ru/docs/ydb/docapi/api-ref/actions/updateItem
   https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.UpdateExpressions.html
-
   "
   (:require
-   [clojure.string :as str]
-   [clj-aws-sign.core :as aws-sign]
    [cheshire.core :as json]
+   [clj-aws-sign.core :as aws-sign]
+   [clojure.string :as str]
    [org.httpkit.client :as http])
   (:import
    java.net.URI
-   java.time.format.DateTimeFormatter
+   java.time.Instant
    java.time.ZoneId
-   java.time.Instant))
+   java.time.format.DateTimeFormatter))
 
 
 (def ^DateTimeFormatter
@@ -111,7 +110,7 @@
         (format "DynamoDB_%s.%s" version target)
 
         auth-header
-        (clj-aws-sign.core/authorize
+        (aws-sign/authorize
          {:method "POST"
           :uri path
           :date date

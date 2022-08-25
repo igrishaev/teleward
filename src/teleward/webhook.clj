@@ -5,7 +5,7 @@
    [clojure.tools.logging :as log]
    [org.httpkit.server :as server]
    [teleward.processing :as processing]
-   [teleward.state.atom :as state]
+   [teleward.state-atom :as state-atom]
    [teleward.telegram :as tg])
   (:import
    java.util.Timer
@@ -105,7 +105,7 @@
         (tg/get-me telegram)
 
         state
-        (state/make-state)
+        (state-atom/make-state)
 
         context
         {:me me

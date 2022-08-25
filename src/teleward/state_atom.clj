@@ -1,11 +1,11 @@
-(ns teleward.state.atom
+(ns teleward.state-atom
   "
   An atom-driven state that tracks a map like
   chat-id => user => {attrs}
   inside.
   "
   (:require
-   [teleward.state.api :as api]))
+   [teleward.state :as state]))
 
 
 (defn in? [val collection]
@@ -14,7 +14,7 @@
 
 (defrecord AtomState [-state]
 
-  api/IState
+  state/IState
 
   (set-attr [_ chat-id user-id attr val]
     (swap! -state assoc-in [chat-id user-id attr] val))
@@ -68,17 +68,17 @@
 
  (def -s (make-state))
 
- (api/set-attr -s 1 2 :foo 1)
- (api/set-attr -s 1 3 :foo 9)
+ (state/set-attr -s 1 2 :foo 1)
+ (state/set-attr -s 1 3 :foo 9)
 
- (api/get-attrs -s 1 2)
- (api/get-attr -s 1 2 :foo)
+ (state/get-attrs -s 1 2)
+ (state/get-attr -s 1 2 :foo)
 
- (api/inc-attr -s 1 2 :foo)
+ (state/inc-attr -s 1 2 :foo)
 
- (api/filter-by-attr -s :foo '> 3)
+ (state/filter-by-attr -s :foo '> 3)
 
- (api/filter-by-attr -s :foo :in #{9})
+ (state/filter-by-attr -s :foo :in #{9})
 
 
  )
