@@ -49,18 +49,51 @@
      :region region}))
 
 
+(defn error! [template & args]
+  (throw (new Exception ^String (apply format template args))))
+
+
 (defn stream? [x]
   (instance? java.io.InputStream x))
 
 
-(defn parse-response [{:keys [body]}]
+(defn parse-response [{:as response :keys [body]}]
   (cond
+
     (string? body)
-    (json/parse-string body keyword)
+    (update response :body json/parse-string keyword)
+
     (stream? body)
-    (json/parse-stream body keyword)
+    (update response :body json/parse-stream keyword)
+
     :else
-    (throw (new Exception "aaaaa"))))
+    (error! "Wrong response body type: %s" (type body))))
+
+
+(defn maybe-throw-response [{:as response :keys [body]}]
+  (let [{:keys [__type message]}
+        body]
+    (if (and __type message)
+      (let [{:keys [status
+                    opts]}
+            response
+
+            {:keys [method
+                    headers
+                    url]}
+            opts]
+        (throw (ex-info "DynamoDB error"
+                        {:url url
+                         :status status
+                         :method method
+                         :headers headers
+                         :error-type __type
+                         :error-message message})))
+      body)))
+
+
+(def response-handler
+  (comp maybe-throw-response parse-response))
 
 
 (defn make-request
@@ -98,15 +131,18 @@
          "x-amz-target" amz_target
          "x-amz-date" date}]
 
-    @(http/request
-      {:method :post
-       :url endpoint
-       :body payload
-       :headers headers}
-      parse-response)))
+    (-> {:method :post
+         :url endpoint
+         :body payload
+         :headers headers}
+
+        (http/request)
+        (deref)
+        (parse-response)
+        (maybe-throw-response))))
 
 
-(defn ->aws [x]
+(defn value-encode [x]
   (cond
 
     (string? x)
@@ -119,27 +155,18 @@
     {:BOOL x}
 
     :else
-    (throw (new Exception "aaa"))))
+    (error! "Unsupported value to encode: %s" x)))
 
 
-(defn aws-> [[k v]]
+(defn value-decode [[k v]]
   (case k
-    :S    v
-    :N    (parse-long v)
-    ;; :M    parse-map
-    ;; :L    parse-list
-    :BOOL v))
+    :S v
+    :N (parse-long v)
+    :BOOL v
+    (error! "Unsupported value to decode: %s %s" k v)))
 
 
-(defn aws-deserialize [mapping]
-  (reduce-kv
-   (fn [result k v]
-     (assoc result k (-> v first aws->)))
-   {}
-   mapping))
-
-
-(defn attr->aws [x]
+(defn attr-encode [x]
   (cond
     (keyword? x)
     (-> x str (subs 1))
@@ -151,13 +178,21 @@
     (str x)
 
     :else
-    (throw (new Exception "xxx"))))
+    (error! "Wrong attribute: %s" x)))
 
 
-(defn aws-serialize [mapping]
+(defn item-encode [mapping]
   (reduce-kv
    (fn [result k v]
-     (assoc result (attr->aws k) (->aws v)))
+     (assoc result (attr-encode k) (value-encode v)))
+   {}
+   mapping))
+
+
+(defn item-decode [mapping]
+  (reduce-kv
+   (fn [result k v]
+     (assoc result k (-> v first value-decode)))
    {}
    mapping))
 
@@ -178,9 +213,9 @@
                   (update tmp (fnil conj [])
                           (format "#%s = :%s" attr-sym attr-sym))
                   (assoc-in [:ExpressionAttributeNames (str "#" attr-sym)]
-                            (attr->aws k))
+                            (attr-encode k))
                   (assoc-in [:ExpressionAttributeValues (str ":" attr-sym)]
-                            (->aws v)))))
+                            (value-encode v)))))
           scope
           mapping)]
 
@@ -206,7 +241,7 @@
               (-> result
                   (update tmp (fnil conj []) (str "#" attr-sym))
                   (assoc-in [:ExpressionAttributeNames (str "#" attr-sym)]
-                            (attr->aws attr)))))
+                            (attr-encode attr)))))
           scope
           attrs)]
 
@@ -217,26 +252,46 @@
          (dissoc tmp)))))
 
 
-(defn get-item [client table map-key]
+(defn set-return-vals [params kw]
+  (assoc params :ReturnValues
+         (case kw
+           :none "NONE"
+           :all-old "ALL_OLD"
+           :updated-old "UPDATED_OLD"
+           :all-new "ALL_NEW"
+           :updated-new "UPDATED_NEW"
+           (error! "Wrong ReturnValues: %s" kw))))
+
+
+;;
+;; API
+;;
+
+(defn get-item [client table pk]
   (let [response
         (make-request client "GetItem"
                       {:TableName table
-                       :Key (aws-serialize map-key)})
-
-        {:keys [Item]}
-        response]
-
-    (when Item
-      (aws-deserialize Item))))
+                       :Key (item-encode pk)})]
+    (update response :Item item-decode)))
 
 
-(defn put-item [client table mapping]
-  (let [response
-        (make-request client "PutItem"
-                      {:TableName table
-                       :Item (aws-serialize mapping)})]
 
-    response))
+(defn put-item
+  ([client table item]
+   (put-item client table item nil))
+
+  ([client table item {:keys [return]}]
+   (let [params
+         (cond-> {:TableName table
+                  :Item (item-encode item)}
+
+           return
+           (set-return-vals return))
+
+         response
+         (make-request client "PutItem" params)]
+
+     (update response :Attributes item-decode))))
 
 
 #_
@@ -254,20 +309,16 @@
                                            cond-expression]}]
   (let [params
         (cond-> {:TableName table
-                 :Key (aws-serialize pk)}
+                 :Key (item-encode pk)}
 
           return
-          (assoc :ReturnValues (case return
-                                 :none "NONE"
-                                 :all-old "ALL_OLD"
-                                 :updated-old "UPDATED_OLD"
-                                 :all-new "ALL_NEW"
-                                 :updated-new "UPDATED_NEW"))
+          (set-return-vals return)
 
           cond-expression
           (assoc :ConditionExpression cond-expression)
 
           ;; add
+          ;; (make-add-params add)
 
           set
           (make-set-params set)
@@ -276,31 +327,93 @@
           (make-remove-params remove)
 
           ;; delete
+          ;; (make-delete-params delete
+
           )
 
         response
         (make-request client "UpdateItem" params)]
 
-    (some-> response :Attributes aws-deserialize)))
+    (update response :Attributes item-decode)))
 
 
-(defn delete-item [client table pk]
-  (let [params
-        {:TableName table
-         :Key (aws-serialize pk)}
+(defn delete-item
 
-        response
-        (make-request client "DeleteItem" params)]
+  ([client table pk]
+   (delete-item client table pk nil))
 
-    response))
+  ([client table pk {:keys [return]}]
+
+   (let [params
+         (cond-> {:TableName table
+                  :Key (item-encode pk)}
+           return
+           (set-return-vals return))
+
+         response
+         (make-request client "DeleteItem" params)]
+
+     (update response :Attributes item-decode))))
+
+
+(defn encode-attr-names
+  [attr-names]
+  (reduce-kv
+   (fn [result k v]
+     (assoc result (str "#" (name k)) (attr-encode v)))
+   {}
+   attr-names))
+
+
+(defn encode-attr-values
+  [attr-values]
+  (reduce-kv
+   (fn [result k v]
+     (assoc result (str ":" (name k)) (value-encode v)))
+   {}
+   attr-values))
+
+
+(defn scan
+  ([client table]
+   (scan client table nil))
+
+  ([client table {:keys [start-key
+                         filter-expr
+                         attr-names
+                         attr-values
+                         limit]}]
+
+   (let [params
+         (cond-> {:TableName table}
+
+           start-key
+           (assoc :ExclusiveStartKey start-key)
+
+           filter-expr
+           (assoc :FilterExpression filter-expr)
+
+           limit
+           (assoc :Limit limit)
+
+           attr-names
+           (assoc :ExpressionAttributeNames
+                  (encode-attr-names attr-names))
+
+           attr-values
+           (assoc :ExpressionAttributeValues
+                  (encode-attr-values attr-values)))
+
+         response
+         (make-request client "Scan" params)]
+
+     (update response :Items
+             (fn [items]
+               (mapv item-decode items))))))
+
 
 
 (comment
-
-  (def -c (make-client ""
-                       ""
-                       ""
-                       "ru-central1"))
 
   (def -r (get-item -c "table258" {:chat_id 1 :user_id 5}))
 
