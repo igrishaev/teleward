@@ -50,10 +50,23 @@
       (.setLevel (kw->level level)))
 
     (when console
-      (let [app-console
+      (let [{console-name :name
+             console-target :target
+             :or {console-name "console"
+                  console-target "out"}}
+            console
+
+            Target
+            (case console-target
+              (:out "out" "System.out") "System.out"
+              (:err "err" "System.err") "System.err"
+              (throw (new Exception "wrong console target")))
+
+            app-console
             (doto (new ConsoleAppender)
               (.setContext log-context)
-              (.setName "console")
+              (.setName console-name)
+              (.setTarget Target)
               (.setEncoder log-encoder)
               (.start))]
         (.addAppender root-logger app-console)))

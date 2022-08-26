@@ -1,4 +1,5 @@
 
+- optimise me query
 - add docker image
 - check if username null
 - logging/dict

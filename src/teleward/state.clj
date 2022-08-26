@@ -1,4 +1,4 @@
-(ns teleward.state.api)
+(ns teleward.state)
 
 
 (defprotocol IState

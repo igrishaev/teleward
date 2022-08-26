@@ -9,15 +9,18 @@ PWD = $(shell pwd)
 
 PLATFORM = PLATFORM
 
+JAR = target/uberjar/teleward.jar
+
 NI_ARGS = \
-	--report-unsupported-elements-at-runtime \
 	--initialize-at-build-time \
+	--report-unsupported-elements-at-runtime \
 	--no-fallback \
-	--allow-incomplete-classpath \
-	-jar ./target/uberjar/teleward.jar \
+	-jar ${JAR} \
 	-H:IncludeResources='^VERSION$$' \
 	-H:IncludeResources='^config.edn$$' \
-	--enable-url-protocols=http,https \
+	--enable-http \
+	--enable-https \
+	-H:+PrintClassInitialization \
 	-H:ReflectionConfigurationFiles=reflection-config.json \
 	-H:+ReportExceptionStackTraces \
 	-H:Log=registerResource \
@@ -26,7 +29,7 @@ NI_ARGS = \
 ni-args:
 	echo ${NI_ARGS}
 
-build-binary-local: cleanup uberjar graal-build
+build-binary-local: ${JAR} graal-build
 
 cleanup:
 	rm -rf target
@@ -46,7 +49,7 @@ platform-local:
 platform-docker:
 	docker run -it --rm --entrypoint /bin/sh ${NI_TAG} -c 'echo `uname -s`-`uname -m`' > ${PLATFORM}
 
-build-binary-docker: uberjar platform-docker
+build-binary-docker: ${JAR} platform-docker
 	docker run -it --rm -v ${PWD}:/build -w /build ${NI_TAG} ${NI_ARGS}$(shell cat ${PLATFORM})
 
 toc-install:
@@ -64,10 +67,15 @@ docker-run:
 	docker run -it --rm ${TAG}
 
 lint:
-	clj-kondo --lint src --lint profile
+	clj-kondo --lint src
 
-yc-jar:
-	lein with-profile +yc-function uberjar
+ydb-jar:
+	lein with-profile +ydb uberjar
 
-yc-repl:
-	lein with-profile +yc-function repl
+ydb-repl:
+	lein with-profile +ydb repl
+
+PACKAGE=package.zip
+
+bash-package: ydb-jar build-binary-docker
+	zip -j ${PACKAGE} conf/handler.sh builds/teleward-Linux-x86_64

@@ -3,7 +3,7 @@
    [cheshire.core :as json]
    [clojure.tools.logging :as log]
    [teleward.processing :as processing]
-   [teleward.state.atom :as state]
+   [teleward.state-atom :as state-atom]
    [teleward.telegram :as tg]
    [teleward.util :refer [with-safe-log]]))
 
@@ -31,7 +31,7 @@
         (tg/get-me telegram)
 
         state
-        (state/make-state)
+        (state-atom/make-state)
 
         context
         {:me me

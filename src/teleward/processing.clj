@@ -2,7 +2,7 @@
   (:require
    [clojure.tools.logging :as log]
    [teleward.captcha :as captcha]
-   [teleward.state.api :as state]
+   [teleward.state :as state]
    [teleward.telegram :as tg]
    [teleward.template :as template]
    [teleward.time :refer [unix-now]]

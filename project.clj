@@ -34,7 +34,8 @@
    [cheshire "5.10.0"]
    [org.clojure/tools.cli "1.0.206"]
    [org.clojure/tools.logging "1.2.4"]
-   [ch.qos.logback/logback-classic "1.2.11"]]
+   [ch.qos.logback/logback-classic "1.2.11"]
+   [clj-aws-sign "0.1.1"]]
 
   :main ^:skip-aot teleward.main
 
@@ -48,10 +49,8 @@
     {*warn-on-reflection* true
      *assert* true}}
 
-   :yc-function
-   {:dependencies [[com.taoensso/faraday "1.11.4"]
-                   [javax.servlet/javax.servlet-api "4.0.1"]]
-    :source-paths ["profile/yc_function"]}
+   :ydb
+   {:main ^:skip-aot teleward.bash}
 
    :uberjar
    {:aot :all
