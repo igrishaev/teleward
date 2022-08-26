@@ -50,14 +50,14 @@ $> teleward -t <telegram-token> -l error --language ru --captcha.style lisp
 
     (case mode
 
-      :polling
+      (:polling "polling")
       (poll/run-polling config)
 
-      :webhook
+      (:webhook "webhook")
       (webhook/run-webhook config)
 
       ;; else
-      nil)))
+      (throw (ex-info "Mode not set" {:exit/code 1})))))
 
 
 (defn -main*

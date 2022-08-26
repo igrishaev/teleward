@@ -10,8 +10,7 @@ Restart = always
 RestartSec = 1
 User = ivan
 WorkingDirectory = /home/ivan/teleward/
-ExecStart = /home/ivan/teleward/teleward-Linux-x86_64 -m webhook -p 8090 -l debug --polling.user-trail-period=45 --polling.user-trail-attempts=3
-Environment = TELEGRAM_TOKEN=...
+ExecStart = /home/ivan/teleward/teleward-Linux-x86_64 -t '' -m webhook -p 8090 -l debug --polling.user-trail-period=45 --polling.user-trail-attempts=3 --captcha.style=normal --language=ru
 
 [Install]
 WantedBy = multi-user.target
