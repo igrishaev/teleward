@@ -31,7 +31,7 @@
 
 
 (defn run-cron-task
-  [{:as _context :keys [config state]}]
+  [{:as context :keys [config]}]
 
   (let [timer
         (new Timer "teleward" false)
@@ -46,7 +46,7 @@
         (proxy [TimerTask] []
           (run []
             (log/debugf "Running cron job, every: %s" every-ms)
-            (processing/process-pending-users config state)))
+            (processing/process-pending-users context)))
 
         result
         (.scheduleAtFixedRate timer timer-task every-ms every-ms)]
