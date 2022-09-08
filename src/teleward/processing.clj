@@ -144,11 +144,14 @@
   (let [{:keys [me]}
         context
 
+        {me-id :id}
+        @me
+
         {:keys [new_chat_members]}
         message]
 
     (doseq [member new_chat_members
-            :when (not= (:id me) (:id member))]
+            :when (not= me-id (:id member))]
 
       (process-new-member context message member))))
 
@@ -158,7 +161,7 @@
         context
 
         {:keys [username]}
-        me]
+        @me]
 
     (or (= text (str "/" command))
         (= text (str "/" command "@" username)))))

@@ -102,7 +102,8 @@
         config
 
         me
-        (tg/get-me telegram)
+        (delay
+          (tg/get-me telegram))
 
         state
         (state-atom/make-state)

@@ -35,7 +35,8 @@
         config
 
         me
-        (tg/get-me telegram)
+        (delay
+          (tg/get-me telegram))
 
         state
         (state-ydb/make-state)
