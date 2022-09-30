@@ -1,5 +1,6 @@
 (ns teleward.processing
   (:require
+   [clojure.string :as str]
    [clojure.tools.logging :as log]
    [teleward.captcha :as captcha]
    [teleward.state :as state]
@@ -156,25 +157,21 @@
       (process-new-member context message member))))
 
 
-(defn command? [context text command]
-  (let [{:keys [me]}
-        context
-
-        {:keys [username]}
-        @me]
-
-    (or (= text (str "/" command))
-        (= text (str "/" command "@" username)))))
+(defn command? [message]
+  (some-> message :text (str/starts-with? "/")))
 
 
-(defn process-text
+(defn health-command? [message]
+  (some-> message :text (str/starts-with? "/health")))
+
+
+(defn process-commands
   [context message]
 
   (let [{:keys [telegram]}
         context
 
         {:keys [chat
-                text
                 message_id]}
         message
 
@@ -183,12 +180,19 @@
 
     (cond
 
-      (command? context text "health")
+      (health-command? message)
       (with-safe-log
         (tg/send-message telegram
                          chat-id
                          "OK"
                          {:reply-to-message-id message_id})))))
+
+
+(defn process-text
+  [context message]
+  (cond
+    (command? message)
+    (process-commands context message)))
 
 
 (defn process-message
