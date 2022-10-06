@@ -18,6 +18,7 @@ NI_ARGS = \
 	-jar ${JAR} \
 	-H:IncludeResources='^VERSION$$' \
 	-H:IncludeResources='^config.edn$$' \
+	-J-Dfile.encoding=UTF-8 \
 	--enable-http \
 	--enable-https \
 	-H:+PrintClassInitialization \
