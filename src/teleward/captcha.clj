@@ -10,8 +10,8 @@
 
 (defn add-solution [rands solution cols rows]
   (let [r (rand-int rows)
-        c (if (== 0 r)
-            (+ 1 (rand-int (- 1 cols)))
+        c (if (zero? r)
+            (inc (rand-int (dec cols)))
             (rand-int cols))]
     (assoc rands [r c] solution)))
 
