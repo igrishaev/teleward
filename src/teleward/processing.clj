@@ -190,9 +190,33 @@
 
 (defn process-text
   [context message]
-  (cond
-    (command? message)
-    (process-commands context message)))
+
+  (let [{:keys [state]}
+        context
+
+        {:keys [chat
+                from
+                message_id]}
+        message
+
+        {chat-id :id}
+        chat
+
+        {user-id :id}
+        from
+
+        {:keys [locked?]}
+        (state/get-attrs state chat-id user-id)]
+
+    (cond
+
+      ;; Delete any message from a locked user. Sometimes,
+      ;; spammers sneak between the "join" and "mute" events.
+      locked?
+      (delete-message context chat-id message_id)
+
+      (command? message)
+      (process-commands context message))))
 
 
 (defn process-message
@@ -312,9 +336,12 @@
         update-entry]
 
     (cond
+
+      ;; A regular message from a user.
       message
       (process-message context message)
 
+      ;; Triggered when someone pushes a button in a captcha form.
       callback_query
       (process-callback-query context callback_query))))
 
