@@ -152,9 +152,15 @@
         message]
 
     (doseq [member new_chat_members
-            :when (not= me-id (:id member))]
 
-      (process-new-member context message member))))
+            :let
+            [{:keys [id is_bot]}
+             member]]
+
+      ;; 1. do not block other bots (they're up to admins)
+      ;; 2. do not block ourselves
+      (when-not (or is_bot (= me-id id))
+        (process-new-member context message member)))))
 
 
 (defn command? [message]
