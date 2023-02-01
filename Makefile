@@ -80,3 +80,21 @@ PACKAGE=package.zip
 
 bash-package: ydb-jar build-binary-docker
 	zip -j ${PACKAGE} conf/handler.sh builds/teleward-Linux-x86_64
+
+
+token ?= $(error Please specify the token=... argument)
+url ?= $(error Please specify the url=... argument)
+
+
+get-url:
+	curl -X GET \
+	'https://api.telegram.org/bot${token}/getWebhookInfo' \
+	| jq
+
+
+set-url:
+	curl -X POST \
+	'https://api.telegram.org/bot${token}/setWebhook' \
+	-H 'Content-Type: application/json' \
+	-d '{"url": "${url}"}' \
+	| jq
