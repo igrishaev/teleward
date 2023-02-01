@@ -24,3 +24,5 @@ secrets.env
 PLATFORM
 package.zip
 reports
+
+scratch

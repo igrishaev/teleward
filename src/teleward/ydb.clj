@@ -314,6 +314,25 @@
      (update response :Item item-decode))))
 
 
+#_
+(defn create-table
+  "https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html"
+  [client table]
+  (make-request client
+                "CreateTable"
+                {
+                 ;; :BillingMode "PROVISIONED"
+                 :AttributeDefinitions [{:AttributeName "chat_id"
+                                         :AttributeType "N"}
+                                        {:AttributeName "user_id"
+                                         :AttributeType "N"}]
+                 :KeySchema [{:AttributeName "chat_id"
+                              :KeyType "HASH"}
+                             {:AttributeName "user_id"
+                              :KeyType "RANGE"}]
+                 :TableName table
+                 :TableClass "STANDARD"}))
+
 
 (defn put-item
   ([client table item]
@@ -454,6 +473,8 @@
 
 #_
 (comment
+
+  (def -r (create-table -c "foobar"))
 
   (def -r (get-item -c "table258" {:chat_id 1 :user_id 5}))
 
