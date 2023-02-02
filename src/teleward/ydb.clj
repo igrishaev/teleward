@@ -1,7 +1,7 @@
 (ns teleward.ydb
   "
-  https://cloud.yandex.ru/docs/ydb/docapi/api-ref/actions/updateItem
-  https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.UpdateExpressions.html
+  https://cloud.yandex.ru/docs/ydb/docapi/api-ref/
+  https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Operations_Amazon_DynamoDB.html
   "
   (:require
    [cheshire.core :as json]
