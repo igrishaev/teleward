@@ -1,4 +1,4 @@
-(defproject com.github.igrishaev/teleward "0.1.7"
+(defproject com.github.igrishaev/teleward "0.1.8-SNAPSHOT"
 
   :description
   "Captcha bot for Telegram in Clojure + GraalVM"
