@@ -35,8 +35,7 @@
     (-> (db/get-item client
                      table
                      (pk chat-id user-id)
-                     {:attr-keys {:attr attr}
-                      :attrs-get [:attr]})
+                     {:attrs-get [attr]})
         (get-in [:Item attr])))
 
   (get-attrs [_ chat-id user-id]
@@ -49,8 +48,7 @@
     (-> (db/update-item client
                         table
                         (pk chat-id user-id)
-                        {:attr-keys {:attr attr}
-                         :remove [:attr]})
+                        {:remove [attr]})
         :Attributes))
 
   (del-attrs [_ chat-id user-id]
@@ -62,8 +60,7 @@
     (-> (db/update-item client
                      table
                      (pk chat-id user-id)
-                     {:attr-keys {:attr attr}
-                      :add {:attr 1}})
+                     {:add {attr 1}})
         :Attributes))
 
   (filter-by-attr [_ attr op value]
@@ -71,8 +68,8 @@
           (db/scan client
                    table
                    {:sql-filter (format "#attr %s :value" (name op))
-                    :attr-keys {:attr attr}
-                    :attr-vals {:value value}})]
+                    :attr-names {"#attr" attr}
+                    :attr-values {":value" value}})]
       (for [{:as item
              :keys [chat_id
                     user_id]} Items]
@@ -88,15 +85,14 @@
 
   (let [client
         (db/make-client
-         #_(get-env "AWS_ACCESS_KEY_ID") ""
-         #_(get-env "AWS_SECRET_ACCESS_KEY") ""
-         #_(get-env "DYNAMODB_ENDPOINT") ""
-         #_(get-env "AWS_REGION") "ru-central1"
+         (get-env "AWS_ACCESS_KEY_ID")
+         (get-env "AWS_SECRET_ACCESS_KEY")
+         (get-env "DYNAMODB_ENDPOINT")
+         (get-env "AWS_REGION")
          {:throw? true})
 
         table
-        #_(get-env "DYNAMODB_TABLE") "foobar"
-        ]
+        (get-env "DYNAMODB_TABLE") ]
 
     (map->YDBState {:client client :table table})))
 
