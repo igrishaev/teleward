@@ -34,8 +34,7 @@
    [cheshire "5.10.0"]
    [org.clojure/tools.cli "1.0.206"]
    [org.clojure/tools.logging "1.2.4"]
-   [ch.qos.logback/logback-classic "1.2.11"]
-   [clj-aws-sign "0.1.1"]]
+   [ch.qos.logback/logback-classic "1.2.11"]]
 
   :main ^:skip-aot teleward.main
 
@@ -50,7 +49,9 @@
      *assert* true}}
 
    :ydb
-   {:main ^:skip-aot teleward.bash}
+   {:main ^:skip-aot teleward.bash
+    :dependencies
+    [[com.github.igrishaev/dynamodb "0.1.0"]]}
 
    :uberjar
    {:aot :all

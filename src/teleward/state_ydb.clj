@@ -3,7 +3,7 @@
   DynamoDB/YandexDB-driven state.
   "
   (:require
-   [teleward.ydb :as ydb]
+   [dynamodb.api :as db]
    [teleward.state :as state]))
 
 
@@ -18,54 +18,61 @@
   state/IState
 
   (set-attr [_ chat-id user-id attr val]
-    (:Attributes
-     (ydb/update-item client
-                      table
-                      (pk chat-id user-id)
-                      {:set {attr val}})))
+    (-> (db/update-item client
+                        table
+                        (pk chat-id user-id)
+                        {:set {attr val}})
+        :Attributes))
 
   (set-attrs [_ chat-id user-id mapping]
-    (:Attributes
-     (ydb/update-item client
-                      table
-                      (pk chat-id user-id)
-                      {:set mapping})))
+    (-> (db/update-item client
+                        table
+                        (pk chat-id user-id)
+                        {:set mapping})
+        :Attributes))
 
   (get-attr [_ chat-id user-id attr]
-    (get-in
-     (ydb/get-item client
-                   table
-                   (pk chat-id user-id)
-                   {:attrs [attr]})
-     [:Item attr]))
+    (-> (db/get-item client
+                     table
+                     (pk chat-id user-id)
+                     {:attr-keys {:attr attr}
+                      :attrs-get [:attr]})
+        (get-in [:Item attr])))
 
   (get-attrs [_ chat-id user-id]
-    (:Item (ydb/get-item client table (pk chat-id user-id))))
+    (-> (db/get-item client
+                     table
+                     (pk chat-id user-id))
+        :Item))
 
   (del-attr [_ chat-id user-id attr]
-    (:Attributes
-     (ydb/update-item client
-                      table
-                      (pk chat-id user-id)
-                      {:remove [attr]})))
+    (-> (db/update-item client
+                        table
+                        (pk chat-id user-id)
+                        {:attr-keys {:attr attr}
+                         :remove [:attr]})
+        :Attributes))
 
   (del-attrs [_ chat-id user-id]
-    (ydb/delete-item client table (pk chat-id user-id)))
+    (db/delete-item client
+                    table
+                    (pk chat-id user-id)))
 
   (inc-attr [_ chat-id user-id attr]
-    (:Attributes
-     (ydb/update-item client
-                      table
-                      (pk chat-id user-id)
-                      {:add {attr 1}})))
+    (-> (db/update-item client
+                     table
+                     (pk chat-id user-id)
+                     {:attr-keys {:attr attr}
+                      :add {:attr 1}})
+        :Attributes))
 
   (filter-by-attr [_ attr op value]
     (let [{:keys [Items]}
-          (ydb/scan client
-                    table
-                    {:filter-expr (format "#attr %s :value" (name op))
-                     :attr-names {:attr attr}
-                     :attr-values {:value value}})]
+          (db/scan client
+                   table
+                   {:sql-filter (format "#attr %s :value" (name op))
+                    :attr-keys {:attr attr}
+                    :attr-vals {:value value}})]
       (for [{:as item
              :keys [chat_id
                     user_id]} Items]
@@ -80,14 +87,16 @@
 (defn make-state []
 
   (let [client
-        (ydb/make-client
-         (get-env "AWS_ACCESS_KEY_ID")
-         (get-env "AWS_SECRET_ACCESS_KEY")
-         (get-env "DYNAMODB_ENDPOINT")
-         (get-env "AWS_REGION"))
+        (db/make-client
+         #_(get-env "AWS_ACCESS_KEY_ID") ""
+         #_(get-env "AWS_SECRET_ACCESS_KEY") ""
+         #_(get-env "DYNAMODB_ENDPOINT") ""
+         #_(get-env "AWS_REGION") "ru-central1"
+         {:throw? true})
 
         table
-        (get-env "DYNAMODB_TABLE")]
+        #_(get-env "DYNAMODB_TABLE") "foobar"
+        ]
 
     (map->YDBState {:client client :table table})))
 
