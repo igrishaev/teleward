@@ -51,7 +51,7 @@
    :ydb
    {:main ^:skip-aot teleward.bash
     :dependencies
-    [[com.github.igrishaev/dynamodb "0.1.1"]]}
+    [[com.github.igrishaev/dynamodb "0.1.4"]]}
 
    :uberjar
    {:aot :all
