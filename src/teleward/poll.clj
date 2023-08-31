@@ -22,7 +22,7 @@
 (defn run-polling
   [config]
 
-  (let [{{:keys [udpate-timeout
+  (let [{{:keys [update-timeout
                  offset-file]} :polling
          :keys [telegram]}
         config
@@ -49,7 +49,7 @@
             (with-safe-log
               (tg/get-updates telegram
                               {:offset offset
-                               :timeout udpate-timeout}))
+                               :timeout update-timeout}))
 
             new-offset
             (or (some-> updates peek :update_id inc)
